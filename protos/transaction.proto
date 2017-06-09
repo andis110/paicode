@@ -1,0 +1,56 @@
+
+syntax = "proto3";
+
+package protos;
+
+import "persistent.proto";
+
+message Signature {
+	ECPoint p = 1;
+}
+
+//any user's transactions is form by two argument, first the UserTxHeader and second
+//a message according to the transaction type, the size of nounce MUST NOT excceed
+//the size of a hashing string
+
+message UserTxHeader {
+	string	fundId = 1;
+	bytes	nounce = 2;
+}
+
+//user can register a public key only if it has own some pais 
+message RegPublicKey {
+	PublicKey pk = 1;
+}
+
+message AuthChaincode {
+	uint32	code = 1;
+}
+
+//if the fund tx. is invoked by user, Funddata is proved and signed,
+//else, user only sign (authorize) to the calling chaincode, and 
+//Funddata is attached by an additional invoking argument 
+message Fund {
+	oneof d {
+		Funddata userfund = 1;
+		uint32	 invokeChaincode = 3;
+	}
+}
+
+message Funddata {
+	uint32	pai		 = 1;
+	string	toUserId = 2;
+}
+
+//system transactions
+
+message RegChaincode{
+	string	chaincodeName = 1;
+	uint32	chaincodeId = 2;
+}
+
+message RecyclePai{
+	string  deadUserId = 1;
+	string  toUserId = 2;
+}
+
