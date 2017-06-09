@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"errors"
 	"crypto/ecdsa"
+	"crypto/rand"
+	"crypto/sha256"
 	"math/big"
 	"encoding/base64"
 	
@@ -18,12 +20,21 @@ type FundTxData struct{
 	Amount uint	
 }
 
+type SignData struct{
+	Binding []byte
+	signX, signY *big.Int	
+}
+
 type FundTx struct{
 	FundTxData
 	Nounce []byte
 	Invoked bool
 	InvokedCode uint
-	signX, signY *big.Int
+}
+
+type FundTxIn struct{
+	FundTx
+	SignData
 }
 
 func (f *FundTxData) fill(v *pb.Funddata) {
@@ -32,7 +43,7 @@ func (f *FundTxData) fill(v *pb.Funddata) {
 	f.To = v.ToUserId
 }
 
-func (f *FundTx) fill(v interface{}) error{
+func (f *FundTxIn) fill(v interface{}) error{
 	switch data := v.(type){
 		case *pb.UserTxHeader:
 		f.From = data.FundId
@@ -58,15 +69,22 @@ func (f *FundTx) fill(v interface{}) error{
 	return nil
 }
 
-func (f *FundTx) MakeTransaction() (args []string, err error){
+func (s *SignData) Verify(pk *ecdsa.PublicKey) (bool, error){
+	if len(s.Binding) == 0 || s.signX == nil || s.signY == nil{
+		return false, errors.New("Not complete data fields")
+	}
+	
+	return ecdsa.Verify(pk, s.Binding, s.signX, s.signY), errors.New("Signature not match")
+}
+
+func (f *FundTx) MakeTransaction(privk *ecdsa.PrivateKey) (args []string, err error){
 	args = make([]string, 3, 4)
 	err = nil
 		
 	field1 := &pb.UserTxHeader{FundId: f.From, Nounce: f.Nounce}
 	field2 := &pb.Fund{}
-	field3 := &pb.Signature{&pb.ECPoint{f.signX.Bytes(), f.signY.Bytes()}}	
+	field3 := &pb.Signature{}
 	field4 := &pb.Funddata{Pai: uint32(f.Amount), ToUserId: f.To}
-	
 	fields := append(make([]proto.Message, 0, 4), field1, field2, field3)
 	
 	if f.Invoked {
@@ -76,25 +94,38 @@ func (f *FundTx) MakeTransaction() (args []string, err error){
 	}else{
 		field2.D = &pb.Fund_Userfund{field4}
 	}
+	
+	hasher := sha256.New()
 		
 	for i, field := range fields{
+		
+		if i == 2{
+			rx, ry, errx := ecdsa.Sign(rand.Reader, privk, hasher.Sum(nil))
+			if errx != nil{
+				err = errx
+				return
+			}			
+			field3.P = &pb.ECPoint{rx.Bytes(), ry.Bytes()}
+		}
+		
 		rb, errx := proto.Marshal(field)
 		if errx != nil{
 			err = errx
 			return
-		}		
+		}
+		
+		if i < 2{
+			hasher.Write(rb)
+		}
+		
 		args[i] = base64.StdEncoding.EncodeToString(rb)
 	}
 	
 	return
 }
 
-func (f *FundTx) SignTransaction(ecdsa.PrivateKey) error{
-	
-	return nil
-}
 
-func ParseFundTransaction(args []string) (*FundTx, error){
+func ParseFundTransaction(args []string) (*FundTxIn, error){
 	
 	if len(args) < 3 {
 		return nil, errors.New(fmt.Sprint("Not enough args, expect at least 3 but only", len(args)))
@@ -102,7 +133,8 @@ func ParseFundTransaction(args []string) (*FundTx, error){
 	
 	var pargs []string
 	
-	ftx := new(FundTx)
+	ftx := new(FundTxIn)
+	hasher := sha256.New()
 	
 	for i, arg := range args{
 		data, err := base64.StdEncoding.DecodeString(arg)
@@ -113,14 +145,22 @@ func ParseFundTransaction(args []string) (*FundTx, error){
 		
 		var vif proto.Message
 		switch i {
-			case 0:vif = &pb.UserTxHeader{}
-			case 1:vif = &pb.Fund{}
+			case 0:
+				vif = &pb.UserTxHeader{}
+			case 1:
+				vif = &pb.Fund{}
 			case 2:
 				if ftx.Invoked && len(pargs) == 3{
 					return nil, errors.New("Miss field for invoked transaction")
 				}
 				vif = &pb.Signature{}
-			case 3:vif = &pb.Funddata{}
+				ftx.Binding = hasher.Sum(nil)
+			case 3:
+				vif = &pb.Funddata{}
+		}
+		
+		if i < 2{
+			hasher.Write(data)
 		}
 		
 		err = proto.Unmarshal(data, vif)
