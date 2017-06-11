@@ -11,35 +11,6 @@ import (
 	paicrypto "gamecenter.mobi/paicode/crypto"
 )
 
-func TestPublicKey(t *testing.T){
-
-	prvkeystd, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil{
-		t.Skip("Skip for ecdsa lib fail:", err)
-	}
-	
-	rb := make([]byte, 32)
-	_, err = rand.Read(rb)
-	if err != nil{
-		t.Skip("rand make 256bit bytes fail", err)
-	}	
-	
-	publick := NewPublicKeyFromPriv(&paicrypto.ECDSAPriv{paicrypto.ECP256_FIPS186, prvkeystd.D})
-	
-	if publick == nil{
-		t.Fatal("Generate public key from NewPublicKeyFromPriv fail")
-	}		
-	
-	sx, sy, err := ecdsa.Sign(rand.Reader, prvkeystd, rb)
-	if err != nil{
-		t.Fatal(err)
-	}
-	
-	if !ecdsa.Verify(&publick.PublicKey, rb, sx, sy) {
-		t.Fatal("verify signature with generated publickey fail")
-	}
-	
-}
 
 func TestPublicKey_DumpPb(t *testing.T){
 
@@ -54,16 +25,12 @@ func TestPublicKey_DumpPb(t *testing.T){
 		t.Skip("rand make 256bit bytes fail", err)
 	}	
 	
-	publick := NewPublicKeyFromPriv(&paicrypto.ECDSAPriv{paicrypto.ECP256_FIPS186, prvkeystd.D})
+	prvk := &paicrypto.ECDSAPriv{paicrypto.ECP256_FIPS186, prvkeystd.D}
 	
-	if publick == nil{
-		t.Fatal("Generate public key from NewPublicKeyFromPriv fail")
-	}	
+	pbdump, err := MakePbFromPrivKey(prvk)
 	
-	pbdump := publick.MakePb()
-	
-	if pbdump == nil {
-		t.Fatal("Make protobuf message fail")
+	if err != nil {
+		t.Fatal(err)
 	}
 	
 	msgbyte, err := proto.Marshal(pbdump)
@@ -78,7 +45,8 @@ func TestPublicKey_DumpPb(t *testing.T){
 		t.Fatal("Unmarshal protobuf fail", err)
 	}
 	
-	publick2 := NewPublicKey(pbrcv)
+	pk := (*PublicKey) (pbrcv)
+	publick2 := pk.ECDSAPublicKey()
 	
 	if publick2 == nil{
 		t.Fatal("Generate public key from NewPublicKey fail")
@@ -89,7 +57,7 @@ func TestPublicKey_DumpPb(t *testing.T){
 		t.Fatal(err)
 	}
 	
-	if !ecdsa.Verify(&publick2.PublicKey, rb, sx, sy) {
+	if !ecdsa.Verify(publick2, rb, sx, sy) {
 		t.Fatal("verify signature with dump publickey fail")
 	}	
 	

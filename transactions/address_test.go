@@ -3,20 +3,15 @@ package transactions
 import (
 	"testing"
 	"strings"
-	"math/big"
 	"crypto/rand"
-	
-	paicrypto "gamecenter.mobi/paicode/crypto"
+	"crypto/ecdsa"
+	"crypto/elliptic"
 )
 
-const (
-	testPrefix int = 1
-)
+func testIdA(t *testing.T, pk1 *ecdsa.PublicKey, pk2 *ecdsa.PublicKey){
 
-func testIdA(t *testing.T, pk1 *PublicKey, pk2 *PublicKey){
-
-	id1 := pk1.GetUserId(testPrefix)
-	id2 := pk2.GetUserId(testPrefix)
+	id1 := AddrHelper.GetUserId(pk1)
+	id2 := AddrHelper.GetUserId(pk2)
 	
 	if len(id1) == 0 || len(id2) == 0{
 		t.Fatal("Invalid id", id1, "--", id2)
@@ -30,10 +25,10 @@ func testIdA(t *testing.T, pk1 *PublicKey, pk2 *PublicKey){
 	
 }
 
-func testIdB(t *testing.T, pk1 *PublicKey, pk2 *PublicKey){
+func testIdB(t *testing.T, pk1 *ecdsa.PublicKey, pk2 *ecdsa.PublicKey){
 
-	id1 := pk1.GetUserId(testPrefix)
-	id2 := pk2.GetUserId(testPrefix)
+	id1 := AddrHelper.GetUserId(pk1)
+	id2 := AddrHelper.GetUserId(pk2)
 	
 	if len(id1) == 0 || len(id2) == 0{
 		t.Fatal("Invalid id", id1, "--", id2)
@@ -55,35 +50,31 @@ func TestDump_Userid(t *testing.T){
 		t.Skip("rand make 256bit bytes fail", err)
 	}	
 	
-	var one, sed1, sed2 *big.Int
-	one = big.NewInt(1) 
-	sed1 = new(big.Int)
-	sed2 = new(big.Int)
-	
-	sed1.SetBytes(rb)
-	sed2.Add(sed1, one)
-	
-	publick1 := NewPublicKeyFromPriv(&paicrypto.ECDSAPriv{paicrypto.ECP256_FIPS186, sed1})
-	publick2 := NewPublicKeyFromPriv(&paicrypto.ECDSAPriv{paicrypto.ECP256_FIPS186, sed2})
-
-	if publick1 == nil || publick2 == nil{
-		t.Fatal("Invalid public key")
-	}
-	
-	_, err = publick1.GetUserHash()
+	prv1, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil{
-		t.Fatal("fail hash:", err)
+		t.Skip("Make ecdsa key fail", err)
+	}	
+	prv2, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil{
+		t.Skip("Make ecdsa key fail", err)
 	}
+
 	
-	testIdA(t, publick1, publick1)
-	testIdB(t, publick1, publick2)
+	testIdA(t, &prv1.PublicKey, &prv1.PublicKey)
+	testIdB(t, &prv1.PublicKey, &prv2.PublicKey)
 	
 	for i := 0; i < 5000; i++ {
-		sed2 = sed2.Add(sed2, one)
-		publick1 = publick2
-		testIdA(t, publick1, publick2)
-		publick2 = NewPublicKeyFromPriv(&paicrypto.ECDSAPriv{paicrypto.ECP256_FIPS186, sed2})
-		testIdB(t, publick1, publick2)
+		prv1 = prv2
+		
+		testIdA(t, &prv1.PublicKey, &prv2.PublicKey)
+		
+		prv2, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		
+		if err != nil{
+			t.Skip("Make ecdsa key fail", err)
+		}		
+		
+		testIdB(t, &prv1.PublicKey, &prv2.PublicKey)
 	}
 	
 	
@@ -91,25 +82,22 @@ func TestDump_Userid(t *testing.T){
 
 func TestVerify_Userid(t *testing.T){
 	
-	rb := make([]byte, 32)
-	_, err := rand.Read(rb)
-	if err != nil{
-		t.Skip("rand make 256bit bytes fail", err)
+	prv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+
+	if err != nil {
+		t.Skip("Make ecdsa key fail")
 	}	
 	
-	sed := new(big.Int)	
-	sed.SetBytes(rb)
+	uid := AddrHelper.GetUserId(&prv.PublicKey)
 	
-	publick := NewPublicKeyFromPriv(&paicrypto.ECDSAPriv{paicrypto.ECP256_FIPS186, sed})
-	
-	uid := publick.GetUserId(1)
-	
-	if b, err := VerifyUserId(uid, 1); !b{
-		t.Fatal("verify fail 1", err)
+	if b, err := AddrHelper.VerifyUserId(uid); !b{
+		t.Fatal("verify fail", err)
 	}
 	
-	if b, err := VerifyUserId(uid, 0); b{
-		t.Fatal("verify error 2")		
+	var yahelper AddressHelper = 0
+	
+	if b, err := yahelper.VerifyUserId(uid); b{
+		t.Fatal("verify error")		
 	}else{
 		t.Log("verfiy ret", err)
 	}

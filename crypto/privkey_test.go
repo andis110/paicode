@@ -61,7 +61,7 @@ func TestDump_Privkey(t *testing.T){
 	
 	prvkeyt := ECDSAPriv{1, prvkeystd.D}
 	
-	dmpstr, err := DumpPrivKey(prvkeyt)
+	dmpstr, err := prvkeyt.DumpPrivKey()
 	
 	if err != nil{
 		t.Fatal(err)

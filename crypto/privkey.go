@@ -52,16 +52,6 @@ func GetEC(curveType int) (elliptic.Curve, error){
 	}	
 }
 
-func DumpPrivKey(priv ECDSAPriv) (string, error){
-	
-	rb, err := dumpPrivKey(priv)
-	if err != nil{
-		return "ERROR", err
-	}
-	
-	return base64.StdEncoding.EncodeToString(rb), nil
-}
-
 func PrivKeyfromString(kstr string) (*ECDSAPriv, error){
 	
 	data, err := base64.StdEncoding.DecodeString(kstr)
@@ -70,6 +60,16 @@ func PrivKeyfromString(kstr string) (*ECDSAPriv, error){
 	}
 	
 	return importPrivKey(data)	
+}
+
+func (priv ECDSAPriv) DumpPrivKey() (string, error){
+	
+	rb, err := dumpPrivKey(priv)
+	if err != nil{
+		return "ERROR", err
+	}
+	
+	return base64.StdEncoding.EncodeToString(rb), nil
 }
 
 func (k ECDSAPriv) Apply() (*ecdsa.PrivateKey, error){

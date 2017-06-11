@@ -9,34 +9,27 @@ import (
 
 )
 
-type PublicKey struct{
-	ecdsa.PublicKey
-	CurveType int32
-}
+type PublicKey  pb.PublicKey
 
-func NewPublicKey(pk *pb.PublicKey) *PublicKey{
+func (pk PublicKey) ECDSAPublicKey() *ecdsa.PublicKey{
 	curve, err := paicrypto.GetEC(int(pk.Curvetype))
 	if err != nil{
 		return nil
 	}
 	
-	return &PublicKey{ecdsa.PublicKey{curve, big.NewInt(0).SetBytes(pk.P.GetX()),
-		big.NewInt(0).SetBytes(pk.P.GetY())}, pk.Curvetype}	
+	return &ecdsa.PublicKey{curve, big.NewInt(0).SetBytes(pk.P.GetX()),
+		big.NewInt(0).SetBytes(pk.P.GetY())}	
 }
 
-func NewPublicKeyFromPriv(priv *paicrypto.ECDSAPriv) *PublicKey{
-	pk, err := priv.Apply()
+
+func MakePbFromPrivKey(priv *paicrypto.ECDSAPriv) (*pb.PublicKey, error){
 	
-	if err != nil{
-		return nil
+	pk, err := priv.Apply()
+	if err != nil {
+		return nil, err
 	}
 	
-	return &PublicKey{pk.PublicKey, int32(priv.CurveType)}
-}
-
-func (pk *PublicKey) MakePb() *pb.PublicKey{
-	
-	return &pb.PublicKey{pk.CurveType, &pb.ECPoint{pk.X.Bytes(), pk.Y.Bytes()}}
+	return &pb.PublicKey{int32(priv.CurveType), &pb.ECPoint{pk.X.Bytes(), pk.Y.Bytes()}}, nil
 	
 }
 

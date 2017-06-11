@@ -7,18 +7,22 @@ import (
 	"encoding/asn1"
 	"encoding/base64"
 	"crypto/sha256"
+	"crypto/ecdsa"
 	"golang.org/x/crypto/ripemd160"
 )
 
-func (pk *PublicKey) GetUserHash() ([]byte, error) {
+type AddressHelper int
+
+var AddrHelper AddressHelper = 1
+
+func getUserHash(pk *ecdsa.PublicKey) ([]byte, error) {
 	
 	type StandardPk struct{
 		X *big.Int
 		Y *big.Int
-		CurveType int "tag:10"
 	}
 	
-	stdpk := StandardPk{X: pk.X, Y: pk.Y, CurveType: int(pk.CurveType)}
+	stdpk := StandardPk{X: pk.X, Y: pk.Y}
 	
 	rawbytes, err := asn1.Marshal(stdpk)
 	
@@ -51,7 +55,7 @@ const (
 	AddressVerifyCodeSize = 4
 )
 
-func getCheckSum(rb []byte) ([AddressVerifyCodeSize]byte, error){
+func (_ AddressHelper) GetCheckSum(rb []byte) ([AddressVerifyCodeSize]byte, error){
 	
 	var ret [AddressVerifyCodeSize]byte
 	
@@ -68,8 +72,8 @@ func getCheckSum(rb []byte) ([AddressVerifyCodeSize]byte, error){
 	return [AddressVerifyCodeSize]byte{hash2pass[0], hash2pass[1], hash2pass[2], hash2pass[3]}, nil
 }
 
-func VerifyUserId(id string, prefix int) (bool, error){
-	data, err := base64.StdEncoding.DecodeString(id)
+func (prefix AddressHelper) VerifyUserId(id string) (bool, error){
+	data, err := base64.RawURLEncoding.DecodeString(id)
 	
 	if uint8(prefix % 256) != uint8(data[0]){
 		return false, errors.New("Different prefix")
@@ -83,7 +87,7 @@ func VerifyUserId(id string, prefix int) (bool, error){
 		return false, errors.New("Wrong bytes size")
 	}
 	
-	ck, err := getCheckSum(data[:AddressPartByteSize])
+	ck, err := prefix.GetCheckSum(data[:AddressPartByteSize])
 	if err != nil{
 		return false, errors.New("Get checksum fail")
 	}
@@ -91,7 +95,7 @@ func VerifyUserId(id string, prefix int) (bool, error){
 	return bytes.Equal(ck[:], data[AddressPartByteSize:]), errors.New("checksum not equal")
 }
 
-func GenUserId(prefix int, rb []byte) string{
+func (prefix AddressHelper) GenUserId(rb []byte) string{
 
 	fullbytes := make([]byte, 1, AddressFullByteSize)
 	fullbytes[0] = uint8(prefix % 256)	
@@ -101,23 +105,23 @@ func GenUserId(prefix int, rb []byte) string{
 		return ""
 	}
 	
-	ck, err := getCheckSum(fullbytes)	
+	ck, err := prefix.GetCheckSum(fullbytes)	
 	if err != nil{
 		return ""
 	}
 	
-	return base64.StdEncoding.EncodeToString(append(fullbytes, ck[:]...))
+	return base64.RawURLEncoding.EncodeToString(append(fullbytes, ck[:]...))
 	
 }
 
-func (pk *PublicKey) GetUserId(prefix int) string{
+func (prefix AddressHelper) GetUserId(pk *ecdsa.PublicKey) string{
 		
-	hashbytes, err := pk.GetUserHash()
+	hashbytes, err := getUserHash(pk)
 	if err != nil{
 		return ""
 	}
 	
-	return GenUserId(prefix, hashbytes)
+	return prefix.GenUserId(hashbytes)
 }
 
 
