@@ -31,12 +31,15 @@ const(
 )
 
 //keep a singleton
-var Helper *SecurityPolicy
+var Helper = &SecurityPolicy{true, 0}
 
-func InitSecHelper(set *pb.DeploySetting) *SecurityPolicy{
-	
-	Helper = &SecurityPolicy{dbgMode: set.DebugMode, netCode: int(set.NetworkCode)}
-	return Helper
+func (s *SecurityPolicy) Update(set *pb.DeploySetting){
+	s.dbgMode = set.DebugMode
+	s.netCode = int(set.NetworkCode)
+}
+
+func InitSecHelper(set *pb.DeploySetting){	
+	Helper.Update(set)
 }
 
 func (sec *SecurityPolicy) ActiveAudit(stub shim.ChaincodeStubInterface, desc string){

@@ -4,6 +4,7 @@ syntax = "proto3";
 package protos;
 
 import "persistent.proto";
+import "google/protobuf/any.proto";
 
 message Signature {
 	ECPoint p = 1;
@@ -27,13 +28,17 @@ message AuthChaincode {
 	uint32	code = 1;
 }
 
-//if the fund tx. is invoked by user, Funddata is proved and signed,
-//else, user only sign (authorize) to the calling chaincode, and 
-//Funddata is attached by an additional invoking argument 
+//fund tx can be invoked directly by user or other chaincode, 
+//if the fund tx. is invoked by user, invokeChaincode is 0
+//and Funddata is used
+//any other chaincode invoked fund tx must add their data fields
+//in Fund, or use contract field for another parsing
 message Fund {
+	uint32	 invokeChaincode = 4;
 	oneof d {
-		Funddata userfund = 1;
-		uint32	 invokeChaincode = 3;
+		Funddata 			userfund = 1;
+		bool				null     = 2;
+		google.protobuf.Any contract = 3;
 	}
 }
 
@@ -42,7 +47,17 @@ message Funddata {
 	string	toUserId = 2;
 }
 
+
 //system transactions
+message PreassignData{
+	string  userid = 1;
+	int64	pais = 2;
+}
+
+message InitChaincode{
+	DeploySetting mainsetting = 1;
+	repeated PreassignData preassignedUser = 2;   
+}
 
 message RegChaincode{
 	string	chaincodeName = 1;

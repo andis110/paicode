@@ -14,6 +14,7 @@ import (
 	persistpb "gamecenter.mobi/paicode/protos"
 	sec "gamecenter.mobi/paicode/chaincode/security" 
 	tx "gamecenter.mobi/paicode/chaincode/transaction"
+	_ "gamecenter.mobi/paicode/transactions"
 )
 
 type paiStatus struct{
@@ -48,40 +49,6 @@ func (s *paiStatus) init(set *persistpb.DeploySetting){
 func (s *paiStatus) set(set *persistpb.DeploySetting){
 	 set.TotalPais = s.totalPai
 	 set.UnassignedPais = s.frozenPai
-}
-
-func (t *PaiChaincode) updateCache(stub shim.ChaincodeStubInterface) error{
-	t.globalLock.RLock()
-	defer t.globalLock.RUnlock()
-	
-	if !t.cacheOK{
-		t.globalLock.Lock()
-		defer t.globalLock.RUnlock()
-		
-		rawset, err := stub.GetState(global_setting_entry)
-		if err != nil{
-			return err
-		}
-		
-		if rawset == nil{
-			return errors.New("FATAL: No global setting found")
-		}
-		
-		setting := &persistpb.DeploySetting{}
-		err = proto.Unmarshal(rawset, setting)
-		
-		if err != nil{
-			return err
-		}
-		
-		sec.InitSecHelper(setting)
-		t.paistat.init(setting)
-		logger.Info("Update global setting:", setting)
-		
-		t.cacheOK = true	
-	}
-	
-	return nil
 }
 
 func (t *PaiChaincode) saveGlobalStatus(stub shim.ChaincodeStubInterface) error{
@@ -123,6 +90,12 @@ func (t *PaiChaincode) saveGlobalStatus(stub shim.ChaincodeStubInterface) error{
 }
 
 func (t *PaiChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+
+	err := t.handleInit(stub, args)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return nil, nil
 }

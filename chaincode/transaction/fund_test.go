@@ -8,6 +8,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	
 )
 
 func compareTest(tx1 *FundTx, tx2 *FundTx) (bool, error){
@@ -89,4 +90,10 @@ func TestTx_UserFund(t *testing.T){
 		t.Fatal("Nounce not match")
 	}	
 	
+}
+
+func TestTx_HandlingFund(t *testing.T){
+	
+}
+
 }

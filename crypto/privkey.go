@@ -11,7 +11,7 @@ import (
 )
 
 type ECDSAPriv struct {
-	CurveType asn1.Enumerated "tag:10"
+	CurveType int "tag:10"
 	D *big.Int
 }
 
