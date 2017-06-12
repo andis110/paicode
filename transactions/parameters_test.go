@@ -13,8 +13,8 @@ func TestEncode_Decode(t *testing.T){
 	
 	fields := [][2]proto.Message{
 		{&pb.UserTxHeader{FundId: "test1", Nounce: []byte{42, 42, 42, 42, 42}}, &pb.UserTxHeader{}},
-		{&pb.Fund{D: &pb.Fund_InvokeChaincode{150}}, &pb.Fund{}},
-		{&pb.Fund{D: &pb.Fund_Userfund{&pb.Funddata{Pai:1000, ToUserId: "test2"}}}, &pb.Fund{}}}
+		{&pb.Fund{InvokeChaincode: 10, D: &pb.Fund_Null{false}}, &pb.Fund{}},
+		{&pb.Fund{InvokeChaincode: 0, D: &pb.Fund_Userfund{&pb.Funddata{Pai:1000, ToUserId: "test2"}}}, &pb.Fund{}}}
 	
 	fin := fields[0][0]
 	fout := fields[0][1]

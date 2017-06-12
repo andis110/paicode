@@ -58,10 +58,19 @@ func TestDump_Userid(t *testing.T){
 	if err != nil{
 		t.Skip("Make ecdsa key fail", err)
 	}
-
 	
 	testIdA(t, &prv1.PublicKey, &prv1.PublicKey)
 	testIdB(t, &prv1.PublicKey, &prv2.PublicKey)
+	
+	uid := AddrHelper.GetUserId(&prv1.PublicKey)
+	decbuf := AddrHelper.DecodeUserid(uid)
+	if decbuf == nil{
+		t.Fatal("Can't decode address")
+	}
+	
+	if strings.Compare(AddrHelper.GenUserId(decbuf[1:]), uid) != 0{
+		t.Fatal("Decoded byte not correct")
+	}
 	
 	for i := 0; i < 5000; i++ {
 		prv1 = prv2

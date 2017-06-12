@@ -55,6 +55,17 @@ const (
 	AddressVerifyCodeSize = 4
 )
 
+func (_ AddressHelper) DecodeUserid(id string) []byte{
+	
+	data, err := base64.RawURLEncoding.DecodeString(id)
+
+	if err != nil {
+		return nil
+	}
+	
+	return data[:AddressPartByteSize]	
+}
+
 func (_ AddressHelper) GetCheckSum(rb []byte) ([AddressVerifyCodeSize]byte, error){
 	
 	var ret [AddressVerifyCodeSize]byte
@@ -74,14 +85,14 @@ func (_ AddressHelper) GetCheckSum(rb []byte) ([AddressVerifyCodeSize]byte, erro
 
 func (prefix AddressHelper) VerifyUserId(id string) (bool, error){
 	data, err := base64.RawURLEncoding.DecodeString(id)
+
+	if err != nil {
+		return false, errors.New("Wrong base64 decoding")
+	}
 	
 	if uint8(prefix % 256) != uint8(data[0]){
 		return false, errors.New("Different prefix")
 	} 
-	
-	if err != nil {
-		return false, errors.New("Wrong base64 decoding")
-	}
 	
 	if len(data) != AddressFullByteSize{
 		return false, errors.New("Wrong bytes size")

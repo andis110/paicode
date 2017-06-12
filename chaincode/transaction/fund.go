@@ -2,8 +2,10 @@ package transaction
 
 import (
 	"fmt"
+	"strings"
 	"errors"
 	"crypto/ecdsa"
+	"crypto/sha256"
 	"time"
 	
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -169,13 +171,23 @@ func (f *fundHandler) HandleUserTx(uid string, ud *persistpb.UserData, stub shim
 		}
 	}
 	
+	if strings.Compare(uid, fdetail.To) == 0{
+		err = errors.New("Can't make funding to yourself")
+		return
+	} 
+	
 	/*then checking validation of pai ...*/
 	if ud.Pais < int64(fdetail.Amount){
 		err = errors.New("User has not enough pais to pay!")
 		return
 	}
 	
-	txnouncekey := uid + string(fdetail.Nounce)
+	hsha := sha256.New()
+	wsize, _ := hsha.Write(txutil.AddrHelper.DecodeUserid(uid))
+	hsha.Write(fdetail.Nounce)
+	if hsha.
+	
+	txnouncekey := sha256.Sum256(data)txutil.AddrHelper.DecodeUserid(uid) + string(fdetail.Nounce)
 	logger.Debug("fund tx nounce:", txnouncekey)
 	
 	var data []byte

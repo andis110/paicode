@@ -13,8 +13,8 @@ import (
 func TestUserTxCoding(t *testing.T){
 
 	fields := [][2]proto.Message{
-		{&pb.Fund{D: &pb.Fund_InvokeChaincode{150}}, &pb.Fund{}},
-		{&pb.Fund{D: &pb.Fund_Userfund{&pb.Funddata{Pai:1000, ToUserId: "test2"}}}, &pb.Fund{}}}
+		{&pb.Fund{InvokeChaincode: 10, D: &pb.Fund_Null{false}}, &pb.Fund{}},
+		{&pb.Fund{InvokeChaincode: 0, D: &pb.Fund_Userfund{&pb.Funddata{Pai:1000, ToUserId: "test2"}}}, &pb.Fund{}}}
 
 	privk, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	

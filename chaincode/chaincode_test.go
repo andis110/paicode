@@ -155,6 +155,25 @@ func testFailConfirmUser(t *testing.T, stub *shim.MockStub, privk *wallet.Privke
 	t.Log(err)
 }
 
+func confirmPais(t *testing.T, stub *shim.MockStub, uid string, expect int64 ){
+	
+	v, ok := stub.State[uid]
+	if !ok{
+		t.Fatal("No user id", uid)
+	}
+	
+	ud := &pb.UserData{}
+	err := proto.Unmarshal(v, ud)	
+	if err != nil{
+		t.Fatal(err)		
+	}
+	
+	if ud.Pais != expect{
+		t.Fatal("Pai not match", ud.Pais, expect)
+	}
+
+}
+
 func TestPaichaincode_FundTx(t *testing.T) {
 	pcc := new(PaiChaincode)
 	stub := shim.NewMockStub("PaicodeTest", pcc)
@@ -182,6 +201,113 @@ func TestPaichaincode_FundTx(t *testing.T) {
 	confirmUser(t, stub, keys[2])
 	testFailConfirmUser(t, stub,  keys[1],  keys[2])
 
+	nounce1 := []byte{42,42,42}
+
+	tx1 := &tx.FundTx{tx.FundTxData{ids[1], 100}, nounce1, false, 0}
+	args, err := tx1.MakeTransaction(keys[0].K) 
+	if err != nil{
+		t.Fatal(err)
+	}
+	
+	_, err = stub.MockInvoke("testFund", tx.UserFund, args)
+	if err != nil{
+		t.Fatal(err)
+	}
+	
+	confirmPais(t, stub, ids[0], 49900)
+	confirmPais(t, stub, ids[1], 110)
+	
+	_, err = stub.MockInvoke("testFund", tx.UserFund, args)
+	if err == nil{
+		t.Fatal("Do not recognize duplicated")
+	}
+	t.Log(err)
+	
+	confirmPais(t, stub, ids[0], 49900)	
+	confirmPais(t, stub, ids[1], 110)
+	
+	tx2 := &tx.FundTx{tx.FundTxData{ids[0], 10}, nounce1, false, 0}
+	args, err = tx2.MakeTransaction(keys[1].K) 
+	if err != nil{
+		t.Fatal(err)
+	}	
+	
+	_, err = stub.MockInvoke("testFund", tx.UserFund, args)
+	if err == nil{
+		t.Fatal("Do not recognize duplicated")
+	}	
+	if err == nil{
+		t.Fatal("Do not recognize unregistered user")
+	}
+	t.Log(err)
+	
+	args, err = tx2.MakeTransaction(keys[2].K) 
+	if err != nil{
+		t.Fatal(err)
+	}	
+	_, err = stub.MockInvoke("testFund", tx.UserFund, args)
+	if err != nil{
+		t.Fatal(err)
+	}	
+		
+	confirmPais(t, stub, ids[0], 49910)	
+	confirmPais(t, stub, ids[2], 89)	
+	
+	args, err = tx2.MakeTransaction(keys[0].K) 
+	if err != nil{
+		t.Fatal(err)
+	}	
+	_, err = stub.MockInvoke("testFund", tx.UserFund, args)
+	if err == nil{
+		t.Fatal("Do not recognize self-funding")
+	}		
+	t.Log(err)
+	
+	nounce2 := []byte{42,42,42,42}
+	tx3 := &tx.FundTx{tx.FundTxData{ids[1], 10000}, nounce2, false, 0}
+	args, err = tx3.MakeTransaction(keys[2].K) 
+	if err != nil{
+		t.Fatal(err)
+	}
+	_, err = stub.MockInvoke("testFund", tx.UserFund, args)
+	if err == nil{
+		t.Fatal("Do not recognize unenough pais")
+	}		
+	t.Log(err)	
+	
+	args, err = tx3.MakeTransaction(keys[0].K) 
+	if err != nil{
+		t.Fatal(err)
+	}
+	_, err = stub.MockInvoke("testFund", tx.UserFund, args)
+	if err != nil{
+		t.Fatal(err)
+	}	
+	
+	confirmPais(t, stub, ids[0], 39910)	
+	confirmPais(t, stub, ids[1], 10110)		
+	
+	tx4 := &tx.FundTx{tx.FundTxData{ids[1], 10000}, nil, false, 0}
+	args, err = tx4.MakeTransaction(keys[0].K) 
+	if err != nil{
+		t.Fatal(err)
+	}
+	
+	argsfake, _ := tx4.MakeTransaction(keys[1].K) 
+	argsfake[0] = args[0] //try to breach 0's pai by another signature
+	_, err = stub.MockInvoke("testFund", tx.UserFund, argsfake)
+	if err == nil{
+		t.Fatal("Do not recognize fake signature")
+	}		
+	t.Log(err)		
+	
+	_, err = stub.MockInvoke("testFund", tx.UserFund, args)
+	if err != nil{
+		t.Fatal(err)
+	}
+	
+	confirmPais(t, stub, ids[0], 29910)	
+	confirmPais(t, stub, ids[1], 20110)		
 }
 
 
