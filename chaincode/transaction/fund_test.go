@@ -5,9 +5,13 @@ import (
 	"strings"
 	"bytes"
 	"errors"
-	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
+
+	"github.com/hyperledger/fabric/core/chaincode/shim"
+
+	_ "github.com/golang/protobuf/proto"
+	"gamecenter.mobi/paicode/wallet"
+	pb "gamecenter.mobi/paicode/protos"
+	txutil "gamecenter.mobi/paicode/transactions"		
 	
 )
 
@@ -27,15 +31,15 @@ func compareTest(tx1 *FundTx, tx2 *FundTx) (bool, error){
 
 func TestTx_UserFund(t *testing.T){
 
-	privk, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	privk, err := wallet.DefaultWallet.GeneratePrivKey()
 	
 	if err != nil{
-		t.Skip("Skip for ecdsa lib fail:", err)
+		t.Fatal(err)
 	}	
 	
 	tx1 := &FundTx{FundTxData{"testB", 100}, nil, false, 0}
 	
-	args, err := tx1.MakeTransaction(privk)
+	args, err := tx1.MakeTransaction(privk.K)
 	
 	if err != nil{
 		t.Fatal(err)
@@ -48,7 +52,7 @@ func TestTx_UserFund(t *testing.T){
 	t.Log("Output fields", args)
 	
 	txIn := new(FundTx)
-	err = txIn.Parse(&privk.PublicKey, args)
+	err = txIn.Parse(&privk.K.PublicKey, args)
 	
 	if err != nil{
 		t.Fatal(err)
@@ -62,7 +66,7 @@ func TestTx_UserFund(t *testing.T){
 	
 	tx2 := &FundTx{FundTxData{"testC", 140}, []byte{44, 44, 44, 44, 44}, true, 13}
 	
-	args, err = tx2.MakeTransaction(privk)
+	args, err = tx2.MakeTransaction(privk.K)
 	
 	if err != nil{
 		t.Fatal(err)
@@ -74,7 +78,7 @@ func TestTx_UserFund(t *testing.T){
 	
 	t.Log("Output fields", args)
 	
-	err = txIn.Parse(&privk.PublicKey, args)
+	err = txIn.Parse(&privk.K.PublicKey, args)
 	
 	if err != nil{
 		t.Fatal(err)
@@ -92,8 +96,42 @@ func TestTx_UserFund(t *testing.T){
 	
 }
 
-func TestTx_HandlingFund(t *testing.T){
+func TestFundTx(t *testing.T){
+
+	stub := shim.NewMockStub("DummyTest", nil)	
+	
+	privk , err := wallet.DefaultWallet.GeneratePrivKey()
+	if err != nil{
+		t.Fatal(err)
+	}
+	
+	uid := txutil.AddrHelper.GetUserId(&privk.K.PublicKey)
+	inpk := privk.GenPublicKeyMsg()
+	
+	yaprivk , err := wallet.DefaultWallet.GeneratePrivKey()
+	if err != nil{
+		t.Fatal(err)
+	}
+	yauid := txutil.AddrHelper.GetUserId(&yaprivk.K.PublicKey)
+	
+	tx1 := &FundTx{FundTxData{yauid, 100}, []byte{42,42,42}, false, 0}	
+	args, err := tx1.MakeTransaction(privk.K)
+	if err != nil{
+		t.Fatal(err)		
+	}	
+	
+	h := &fundHandler{}
+	
+	stub.MockTransactionStart("1")
+	out, err := h.HandleUserTx(uid, &pb.UserData{1000, inpk, nil, "Heaven", nil}, stub, args)
+	if err != nil{
+		t.Fatal(err)
+	}
+	stub.MockTransactionEnd("1")
+	
+	if len(out) != 2{
+		t.Fatal("Invalid output")
+	}
 	
 }
 
-}

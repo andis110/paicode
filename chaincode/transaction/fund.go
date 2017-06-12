@@ -134,7 +134,7 @@ const (
 
 func acquireTsNow(stub shim.ChaincodeStubInterface) *timestamp.Timestamp{
 	tsnow, err := stub.GetTxTimestamp()
-	if err != nil{
+	if tsnow == nil || err != nil{
 		logger.Debug("Can't not get timestamp from stub", err)
 		return &timestamp.Timestamp{Seconds: time.Now().Unix(), Nanos: 0}
 	}else{
@@ -224,7 +224,6 @@ func (f *fundHandler) HandleUserTx(uid string, ud *persistpb.UserData, stub shim
 		//index must be added, for safety we set the pai number
 		toUd.Pais = 0
 	}
-
 	
 	//finally, update for transaction
 	ud.Pais -= int64(fdetail.Amount)
@@ -234,8 +233,7 @@ func (f *fundHandler) HandleUserTx(uid string, ud *persistpb.UserData, stub shim
 	toUd.LastActive = tsnow
 	
 	//all the user data will be written back
-	outud[uid] = ud
-	outud[fdetail.To] = toUd
+	outud = map[string]*persistpb.UserData{uid: ud, fdetail.To: toUd}
 	
 	logger.Info("Fund transaction of ", fdetail.Amount, "pais from", uid, "to", fdetail.To)	
 	return

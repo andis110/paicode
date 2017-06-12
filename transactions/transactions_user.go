@@ -26,8 +26,12 @@ type UserTxProducer struct{
 	Nounce  []byte
 }
 
+const(
+	SecurityNounceLen int = 16
+)
+
 func (m *UserTxProducer) helpMakingNounce(){
-	m.Nounce = make([]byte, 16)
+	m.Nounce = make([]byte, SecurityNounceLen)
 	rand.Reader.Read(m.Nounce)
 }
 

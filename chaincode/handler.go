@@ -132,20 +132,23 @@ func (t *PaiChaincode) handleUserFuncs(stub shim.ChaincodeStubInterface, functio
 
 	userdata := &persistpb.UserData{}
 	
-	if raw == nil && function == tx.UserRegPublicKey{
-		//register a new user
-		userdata.Pais = 0
-	}else{		
-		err = proto.Unmarshal(raw, userdata)	
-		if err != nil{
-			return err
-		}		
+	if raw == nil {
+		return errors.New("No corresponding user")
 	}
-
+	
+	err = proto.Unmarshal(raw, userdata)	
+	if err != nil{
+		return err
+	}		
+	
 	if function == tx.UserRegPublicKey {
 		/*region is set here*/
 		userdata.ManagedRegion = region		
 	}else{
+		if userdata.Pk == nil{
+			return errors.New("User has not register his public key yet")
+		}
+		
 		/*check wether region is mathced*/
 		if !sec.Helper.VerifyRegion(userdata.ManagedRegion, region){
 			return errors.New(fmt.Sprint("User tx is invoked in different region:", region))

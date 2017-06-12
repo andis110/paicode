@@ -15,6 +15,7 @@ import (
 	paicrypto "gamecenter.mobi/paicode/crypto"
 	"gamecenter.mobi/paicode/wallet"
 	pb "gamecenter.mobi/paicode/protos"
+	tx "gamecenter.mobi/paicode/chaincode/transaction"
 	txutil "gamecenter.mobi/paicode/transactions"	
 )
 
@@ -106,32 +107,81 @@ type privKey struct{
 	underlyingK	*paicrypto.ECDSAPriv
 } 
 
-func producePrivk(int count) []privKey{
+func producePrivk(count int) (ret []*wallet.Privkey){
 	
+	ret = make([]*wallet.Privkey, count)
+	for i, _ := range ret{
+		k , _ := wallet.DefaultWallet.GeneratePrivKey()
+		if k == nil{
+			ret = nil
+			return
+		}
+		
+		ret[i] = k
+	}
+	
+	return
 } 
+
+func confirmUser(t *testing.T, stub *shim.MockStub, privk *wallet.Privkey){
+	pd := &txutil.UserTxProducer{PrivKey: privk.K}
+	
+	args, err := pd.MakeArguments(&pb.RegPublicKey{privk.GenPublicKeyMsg()})
+	
+	if err != nil{
+		t.Fatal(err)		
+	}
+	
+	_, err = stub.MockInvoke("confirmTest", tx.UserRegPublicKey, args)
+	if err != nil{
+		t.Fatal(err)
+	}
+}
+
+func testFailConfirmUser(t *testing.T, stub *shim.MockStub, privk *wallet.Privkey, wrong_privk *wallet.Privkey){
+	pd := &txutil.UserTxProducer{PrivKey: privk.K}
+	
+	args, err := pd.MakeArguments(&pb.RegPublicKey{wrong_privk.GenPublicKeyMsg()})
+	
+	if err != nil{
+		t.Fatal(err)		
+	}
+	
+	_, err = stub.MockInvoke("confirmTest", tx.UserRegPublicKey, args)
+	if err == nil{
+		t.Fatal("Not fail wrong user reg")
+	}
+	
+	t.Log(err)
+}
 
 func TestPaichaincode_FundTx(t *testing.T) {
 	pcc := new(PaiChaincode)
 	stub := shim.NewMockStub("PaicodeTest", pcc)
 
-	err, ecdsaprivk1, privk1 := wallet.DefaultWallet.GeneratePrivKey()
+	keys := producePrivk(3)
+	if len(keys) < 3{
+		t.Fatal("Produce keys fail")
+	}
+
+	ids := [3]string{
+		txutil.AddrHelper.GetUserId(&keys[0].K.PublicKey),
+		txutil.AddrHelper.GetUserId(&keys[1].K.PublicKey),
+		txutil.AddrHelper.GetUserId(&keys[2].K.PublicKey)}
+
+	err := makeInit(stub, 100000, map[string]int64{
+			ids[0]: 50000, 
+			ids[1]: 10,
+			ids[2]: 99})
+	
 	if err != nil{
 		t.Fatal(err)
 	}
 
-	err, ecdsaprivk2, privk2 := wallet.DefaultWallet.GeneratePrivKey()
-	if err != nil{
-		t.Fatal(err)
-	}
+	confirmUser(t, stub, keys[0])
+	confirmUser(t, stub, keys[2])
+	testFailConfirmUser(t, stub,  keys[1],  keys[2])
 
-	err := makeInit(stub, 100000, map[string]int64{"dummy1": 50000, "dummy2": 10})
-	if err != nil{
-		t.Fatal(err)
-	}
-
-	checkGlobalPai(t, stub, 49990)
-	checkUser(t, stub, "dummy1", 50000)
-	checkUser(t, stub, "dummy2", 10)
 }
 
 

@@ -35,6 +35,11 @@ func (f *regPublicKeyHandler) HandleUserTx(uid string, ud *persistpb.UserData, s
 		return
 	}
 	
+	if len(cs.GetTxNounce()) < txutil.SecurityNounceLen{
+		err = errors.New("Register publickey tx require a longer nounce")
+		return 
+	}
+	
 	pk := (*txutil.PublicKey) (v.Pk).ECDSAPublicKey()
 	
 	//verify public key
@@ -62,7 +67,7 @@ func (f *regPublicKeyHandler) HandleUserTx(uid string, ud *persistpb.UserData, s
 	
 	ud.Pk = v.Pk
 	ud.LastActive = acquireTsNow(stub)	
-	outud[uid] = ud
+	outud = map[string]*persistpb.UserData{uid: ud}
 	
 	return
 }
