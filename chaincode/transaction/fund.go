@@ -5,7 +5,6 @@ import (
 	"strings"
 	"errors"
 	"crypto/ecdsa"
-	"crypto/sha256"
 	"time"
 	
 	"github.com/hyperledger/fabric/core/chaincode/shim"
@@ -182,44 +181,23 @@ func (f *fundHandler) HandleUserTx(uid string, ud *persistpb.UserData, stub shim
 		return
 	}
 	
-	hsha := sha256.New()
-	wsize, _ := hsha.Write(txutil.AddrHelper.DecodeUserid(uid))
-	hsha.Write(fdetail.Nounce)
-	if hsha.
+	ncMgr := &NounceManager{Tsnow: acquireTsNow(stub)}
 	
-	txnouncekey := sha256.Sum256(data)txutil.AddrHelper.DecodeUserid(uid) + string(fdetail.Nounce)
-	logger.Debug("fund tx nounce:", txnouncekey)
-	
-	var data []byte
-	data, err = stub.GetState(txnouncekey)
-	if err != nil{
+	if b, errx := ncMgr.CheckfundNounce(stub, uid, fdetail.Nounce); b{
+		err = errors.New("A fund tx has been recorded recently")
 		return
-	}
-	
-	tsnow := acquireTsNow(stub)	
-	if data != nil{
-		//nounce can be reused if it has finished for a very long time (nounce_reuse_interval_sec)
-		ts := &timestamp.Timestamp{}
-		err = proto.Unmarshal(data, ts)
-		if err == nil{
-			logger.Debug("check nounce's timestamp:", ts, "vs now:", tsnow)
-			
-			if ts.Seconds + nounce_reuse_interval_sec > tsnow.Seconds{
-				err = errors.New("A fund tx has been recorded recently")
-				return
-			}
-		}
+	}else if errx != nil{
+		logger.Warning("Could not check fund nounce:", errx, ",we just continue")
 	}
 	
 	defer func(){
 		if err == nil{
-			data, err = proto.Marshal(tsnow)
-			if err == nil{
-				err = stub.PutState(txnouncekey, data)	
-			}						
-		}}()	
+			ncMgr.SavefundNounce()
+		}
+	}()	
 	
 	//now get the target id
+	var data []byte
 	data, err = stub.GetState(fdetail.To)
 	if err != nil{
 		return
@@ -241,8 +219,8 @@ func (f *fundHandler) HandleUserTx(uid string, ud *persistpb.UserData, stub shim
 	ud.Pais -= int64(fdetail.Amount)
 	toUd.Pais += int64(fdetail.Amount)
 	
-	ud.LastActive = tsnow
-	toUd.LastActive = tsnow
+	ud.LastActive = ncMgr.Tsnow
+	toUd.LastActive = ncMgr.Tsnow
 	
 	//all the user data will be written back
 	outud = map[string]*persistpb.UserData{uid: ud, fdetail.To: toUd}
