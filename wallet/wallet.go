@@ -3,11 +3,14 @@ package wallet
 import (
 	"crypto/rand"
 	"crypto/ecdsa"
+	"github.com/op/go-logging"
 
 	pb		  "gamecenter.mobi/paicode/protos"
 	paicrypto "gamecenter.mobi/paicode/crypto"
 	txutil	  "gamecenter.mobi/paicode/transactions"
 )
+
+var logger = logging.MustGetLogger("wallet")
 
 type Wallet struct{
 	useCurve int
