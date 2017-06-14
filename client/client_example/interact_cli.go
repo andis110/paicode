@@ -1,11 +1,18 @@
 package main
 
 import (
+	"os"
+	"fmt"
+	"bufio"
+	
+	arghelper "github.com/mattn/go-shellwords"
+	
 	fabricpeer_comm "github.com/hyperledger/fabric/peer/common"
 	fabric_pb "github.com/hyperledger/fabric/protos"
+	"github.com/hyperledger/fabric/peerex"
 )
 
-var default_conn fabricpeer_comm.DevopsConn
+var default_conn peerex.ClientConn
 
 func genDevopsClientKeepAlive() (fabric_pb.DevopsClient, error) {
 	devopsClient := fabric_pb.NewDevopsClient(default_conn.C)
@@ -14,9 +21,70 @@ func genDevopsClientKeepAlive() (fabric_pb.DevopsClient, error) {
 
 func main() {
 	
-	fabricpeer_comm.InitPeerViper(".")
+	config := peerex.GlobalConfig{}
+	err := config.InitGlobal()
+	
+	if err != nil{
+		panic(err)		
+	}
+	
+	err = default_conn.Dialdefault()
+	if err != nil{
+		fmt.Println("Dial to peer fail:", err)
+		os.Exit(1)
+	}	
+	
+	cmd := peerex.GetConsolePeer(&config)
+	if cmd == nil{
+		fmt.Println("Can't not make command handler")
+		os.Exit(1)		
+	}
+	
+	fmt.Print("Starting .... ")
+	cmd.SetArgs([]string{"--help"})
+	err = cmd.Execute()
+	if err != nil{
+		fmt.Println("Command handler error:", err)
+		os.Exit(1)		
+	}	
 	
 	fabricpeer_comm.GenDevopsClient = genDevopsClientKeepAlive
+	
+	reader := bufio.NewReader(os.Stdin)
+	parser := arghelper.NewParser()
+	
+	var ln string = "" 
+	
+	for {
+		retbyte, notfinished, err := reader.ReadLine()
+		if err != nil{
+			break
+		}
+		
+		ln += string(retbyte)
+		if !notfinished {
+			//handle read command line
+			//fmt.Println("We get:", ln)
+			args, err := parser.Parse(ln)
+			if err != nil{
+				fmt.Println("Input parse error:", err)		
+			}else{
+				
+				//fmt.Println(len(args), "items:", args)
+				cmd.SetArgs(args)
+				err = cmd.Execute()
+				if err != nil{
+					fmt.Println("Command error:", err)		
+				}				
+			}
+			
+			ln = ""
+			fmt.Println("Continue to next command:")
+		}
+	}
+	
+	fmt.Println("Exiting ...")
+	default_conn.C.Close()
 	
 }
 
