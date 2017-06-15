@@ -13,8 +13,10 @@ import (
 )
 
 var default_conn peerex.ClientConn
+var logger = peerex.InitLogger("main")
 
 func genDevopsClientKeepAlive() (fabric_pb.DevopsClient, error) {
+	logger.Debug("Generate new DevopsClient")
 	devopsClient := fabric_pb.NewDevopsClient(default_conn.C)
 	return devopsClient, nil	
 }
@@ -69,8 +71,7 @@ func main() {
 			if err != nil{
 				fmt.Println("Input parse error:", err)		
 			}else{
-				
-				//fmt.Println(len(args), "items:", args)
+				logger.Debug(len(args), "items:", args)
 				cmd.SetArgs(args)
 				err = cmd.Execute()
 				if err != nil{
