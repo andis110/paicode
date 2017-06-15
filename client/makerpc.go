@@ -11,7 +11,6 @@ type RpcBuilder struct{
 	Function		 string
 	
 	Security		 *SecurityPolicy
-	Responding		 *RespondSepc
 	
 	Conn			 *peerex.ClientConn		
 }
@@ -23,12 +22,8 @@ type SecurityPolicy struct{
 	CustomIDGenAlg  string
 }
 
-type RespondSepc struct{
-	QueryDumpHex	bool
-}
 
 var defaultSecPolicy = &SecurityPolicy{Attributes: []string{}}
-var defaultRespond = &RespondSepc{}
 
 func makeStringArgsToPb(funcname string, args []string) *fabric_pb.ChaincodeInput{
 	
@@ -53,8 +48,7 @@ func makeStringArgsToPb(funcname string, args []string) *fabric_pb.ChaincodeInpu
 	return input
 }
 
-func (b *RpcBuilder) Fire(id string, args []string) error{
-	
+func (b *RpcBuilder) prepare(args []string) *fabric_pb.ChaincodeInvocationSpec{
 	spec := &fabric_pb.ChaincodeSpec{
 		Type: fabric_pb.ChaincodeSpec_GOLANG,	//always set it as golang
 		ChaincodeID: &fabric_pb.ChaincodeID{Name: b.ChaincodeName},
@@ -73,13 +67,29 @@ func (b *RpcBuilder) Fire(id string, args []string) error{
 	//final check attributes
 	if spec.Attributes == nil{
 		spec.Attributes = defaultSecPolicy.Attributes
-	}	
-	
-	resp, err := fabric_pb.DevopsClient(b.Conn).Invoke(ctx, invocation)
-	
-	if err != nil{
-		return err
 	}
 	
-	return nil
+	return invocation	
+}
+
+func (b *RpcBuilder) Fire(args []string) (string, error){	
+	
+	resp, err := fabric_pb.DevopsClient(b.Conn).Invoke(ctx, prepare(args))
+	
+	if err != nil{
+		return "", err
+	}
+	
+	return string(resp.Msg), nil
+}
+
+func (b *RpcBuilder) Query(args []string) ([]byte, error){	
+	
+	resp, err := fabric_pb.DevopsClient(b.Conn).Query(ctx, prepare(args))
+	
+	if err != nil{
+		return "", err
+	}
+	
+	return resp.Msg, nil
 }
