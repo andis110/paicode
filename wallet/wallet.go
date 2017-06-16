@@ -30,8 +30,27 @@ func (k Privkey) GenPublicKeyMsg() *pb.PublicKey{
 	return ret
 }
 
+func (k Privkey) DumpPrivkey() (string, error){
+	return k.underlyingKey.DumpPrivKey()
+}
+
 var DefaultWallet = Wallet{
 	useCurve: paicrypto.ECP256_FIPS186}
+
+func (w *Wallet) ImportPrivKey(keystr string) (*Privkey, error){
+	
+	k, err := paicrypto.PrivKeyfromString(keystr)
+	if err != nil{
+		return nil, err
+	}
+	
+	kk, err := k.Apply()
+	if err != nil{
+		return nil, err
+	}
+	
+	return &Privkey{kk, k}, nil
+}
 
 func (w *Wallet) GeneratePrivKey() (*Privkey, error){
 	

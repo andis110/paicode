@@ -36,6 +36,8 @@ func main() {
 		os.Exit(1)
 	}	
 	
+	defer default_conn.C.Close()
+	
 	cmd := peerex.GetConsolePeer(&config)
 	if cmd == nil{
 		fmt.Println("Can't not make command handler")
@@ -85,7 +87,6 @@ func main() {
 	}
 	
 	fmt.Println("Exiting ...")
-	default_conn.C.Close()
 	
 }
 

@@ -35,3 +35,25 @@ func TestGenkey(t *testing.T){
 	}
 }
 
+func TestDumpkey(t *testing.T){
+	
+	pk1, err := DefaultWallet.GeneratePrivKey()
+	if err != nil{
+		t.Fatal(err)	
+	}
+	
+	str, err := pk1.DumpPrivkey()
+	if err != nil{
+		t.Fatal(err)	
+	}
+	
+	pk2, err := DefaultWallet.ImportPrivKey(str)
+	
+	if err != nil{
+		t.Fatal(err)	
+	}
+	
+	if pk1.K.D.Cmp(pk2.K.D) != 0{
+		t.Fatal("Different key")
+	}				
+}
