@@ -5,14 +5,15 @@ import (
 	"errors"
 	
 	"gamecenter.mobi/paicode/wallet"
+	txutil "gamecenter.mobi/paicode/transactions"
 )
 
 type accountManager struct{
-	KeyMgr *wallet.KeyManager
+	KeyMgr wallet.KeyManager
 }
 
 //generate privatekey: <remark>
-func (m* accountManager) GenPrivkey(args []string) error{
+func (m* accountManager) GenPrivkey(args ...string) error{
 	if len(args) > 1{
 		return errors.New(fmt.Sprint("Could not recognize", args[1:]))
 	}
@@ -36,46 +37,61 @@ func (m* accountManager) GenPrivkey(args []string) error{
 }
 
 //dump privatekey from [remark]
-func (m* accountManager) DumpPrivkey(args []string) (string, error){
+func (m* accountManager) DumpPrivkey(args ...string) (string, error){
 	if len(args) != 1{
-		return errors.New("Invalid remark")
+		return "", errors.New("Invalid remark")
 	}
 	
 	k, err := m.KeyMgr.LoadPrivKey(args[0])
 	if err != nil{
-		return err
+		return "", err
 	}
 	
 	return k.DumpPrivkey()
 }
 
 //get address from [remark]
-func (m* accountManager) GetAddress(args []string) (string, error){
+func (m* accountManager) GetAddress(args ...string) (string, error){
 	if len(args) != 1{
-		return errors.New("Invalid remark")
+		return "", errors.New("Invalid remark")
 	}
 	
 	k, err := m.KeyMgr.LoadPrivKey(args[0])
 	if err != nil{
-		return err
+		return "", err
 	}
 
+	addr := txutil.AddrHelper.GetUserId(&k.K.PublicKey)
+	if len(addr) == 0{
+		return addr, errors.New("Can't generate userid")
+	}
 	
-	
-	return "", nil
+	return addr, nil
 }
 
 //list all keys in manager with remark and address
-func (m* accountManager) ListKeyData(args []string) [][2]string{
+func (m* accountManager) ListKeyData(args ...string) [][2]string{
 	if len(args) != 0{
-		return errors.New("No argument required")
+		return nil
 	}
-		
-	return nil
+	
+	kmap, err := m.KeyMgr.ListAll()
+	if err != nil{
+		return nil
+	}
+	
+	ret := make([][2]string, len(kmap))
+	var i int = 0
+	for k, v := range kmap{
+		ret[i] = [2]string{k, txutil.AddrHelper.GetUserId(&v.K.PublicKey)}
+		i++
+	}
+	
+	return ret
 }
 
 //[import string], <remark>
-func (m* accountManager) ImportPrivkey(args []string) error{
+func (m* accountManager) ImportPrivkey(args ...string) error{
 	
 	if len(args) == 0{
 		return errors.New("Need import string")
@@ -92,7 +108,7 @@ func (m* accountManager) ImportPrivkey(args []string) error{
 		remark = args[1]
 	}	
 	
-	k, err := m.KeyMgr.ImportPrivKey(args[0])
+	k, err := wallet.DefaultWallet.ImportPrivKey(args[0])
 	if err != nil{
 		return err
 	}
