@@ -12,13 +12,60 @@ var accountCmd = &cobra.Command{
 	Short: fmt.Sprintf("account commands."),
 }
 
+var listPrivkeyCmd = &cobra.Command{
+	Use:       "list",
+	Short:     fmt.Sprintf("list all keys"),
+	RunE: func(cmd *cobra.Command, args []string) error{
+		
+		ret := defClient.Accounts.ListKeyData(args...)
+		
+		fmt.Println("-----------------------------------------------------------------")
+		fmt.Println("|  No. |       Name         |               Address             |")
+		fmt.Println("-----------------------------------------------------------------")
+		
+		for i, v := range ret{
+			fmt.Printf("|%6d|%20s|%35s|\n", i, v[0], v[1])
+		}
+		
+		fmt.Println("-----------------------------------------------------------------")
+		
+		return nil
+	},
+}
+
+var queryPrivkeyCmd = &cobra.Command{
+	Use:       "query [remark]",
+	Short:     fmt.Sprintf("query a key"),
+	RunE: func(cmd *cobra.Command, args []string) error{
+		
+		addr, err := defClient.Accounts.GetAddress(args...)
+		if err != nil{
+			return err
+		}
+		
+		fmt.Println(args[0], ":", addr)
+		
+		return nil
+	},
+}
+
 var genPrivkeyCmd = &cobra.Command{
-	Use:       "generate [remark]",
+	Use:       "generate <remark>",
 	Short:     fmt.Sprintf("generate a privkey"),
 	Long:      fmt.Sprintf(`generate a privkey and save it with the name of remark.`),
 	RunE: func(cmd *cobra.Command, args []string) error{
 		
-		return defClient.Accounts.GenPrivkey(args...)
+		rmk, err := defClient.Accounts.GenPrivkey(args...)
+		if err != nil{
+			return err
+		}
+		
+		if len(args) < 1{
+			fmt.Println("Done:", rmk)
+		}else{
+			fmt.Println("Done")
+		}
+		return nil
 	},
 }
 
@@ -38,7 +85,26 @@ var dumpPrivkeyCmd = &cobra.Command{
 	},
 }
 
+var importPrivkeyCmd = &cobra.Command{
+	Use:       "import [dump string] <remark>",
+	Short:     fmt.Sprintf("Import a privkey"),
+	RunE: func(cmd *cobra.Command, args []string) error{
+		
+		err := defClient.Accounts.ImportPrivkey(args...)
+		
+		if err != nil{
+			return err
+		}
+		
+		fmt.Println("Done")		
+		return nil	
+	},
+}
+
 func init(){
 	accountCmd.AddCommand(genPrivkeyCmd)
 	accountCmd.AddCommand(dumpPrivkeyCmd)
+	accountCmd.AddCommand(listPrivkeyCmd)
+	accountCmd.AddCommand(queryPrivkeyCmd)
+	accountCmd.AddCommand(importPrivkeyCmd)
 }

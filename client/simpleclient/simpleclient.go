@@ -3,9 +3,10 @@ package main
 import (
 	"os"
 	"fmt"
-	_ "bufio"
+	"bufio"
 	_ "strings"
 	
+	arghelper "github.com/mattn/go-shellwords"
 	clicore "gamecenter.mobi/paicode/client"
 	
 	"github.com/spf13/cobra"
@@ -13,10 +14,11 @@ import (
 )
 
 var mainCmd = &cobra.Command{
-	Use: "client",
+	Use: ">",
 }
 
 var defClient *clicore.ClientCore 
+var default_conn peerex.ClientConn
 
 func main() {
 	
@@ -29,15 +31,55 @@ func main() {
 	
 	defClient = clicore.NewClientCore()
 	
-	var default_conn peerex.ClientConn
-	err = default_conn.Dialdefault()
+	defer func(){
+		if default_conn.C != nil{
+			default_conn.C.Close()	
+		}		
+	}()
+	
+	fmt.Print("Starting .... ")
+	mainCmd.AddCommand(rpcCmd)
+	mainCmd.AddCommand(accountCmd)
+	
+	mainCmd.SetArgs([]string{"help"})
+	err = mainCmd.Execute()
 	if err != nil{
-		fmt.Println("Dial to peer fail:", err)
-		os.Exit(1)
+		fmt.Println("Command handler error:", err)
+		os.Exit(1)		
 	}	
 	
-	defer default_conn.C.Close()
 	
+	reader := bufio.NewReader(os.Stdin)
+	parser := arghelper.NewParser()
 	
+	var ln string = "" 
+	
+	for {
+		retbyte, notfinished, err := reader.ReadLine()
+		if err != nil{
+			break
+		}
+		
+		ln += string(retbyte)
+		if !notfinished {
+			//handle read command line
+			//fmt.Println("We get:", ln)
+			args, err := parser.Parse(ln)
+			if err != nil{
+				fmt.Println("Input parse error:", err)		
+			}else{
+				mainCmd.SetArgs(args)
+				err = mainCmd.Execute()
+				if err != nil{
+					fmt.Println("Command error:", err)		
+				}				
+			}
+			
+			ln = ""
+			fmt.Println("Continue to next command:")
+		}
+	}
+	
+	fmt.Println("Exiting ...")	
 	
 }

@@ -13,9 +13,9 @@ type accountManager struct{
 }
 
 //generate privatekey: <remark>
-func (m* accountManager) GenPrivkey(args ...string) error{
+func (m* accountManager) GenPrivkey(args ...string) (string, error){
 	if len(args) > 1{
-		return errors.New(fmt.Sprint("Could not recognize", args[1:]))
+		return "", errors.New(fmt.Sprint("Could not recognize", args[1:]))
 	}
 	
 	var remark string		
@@ -27,12 +27,12 @@ func (m* accountManager) GenPrivkey(args ...string) error{
 	
 	k, err := wallet.DefaultWallet.GeneratePrivKey()
 	if err != nil{
-		return err
+		return remark, err
 	}
 	
 	m.KeyMgr.AddPrivKey(remark, k)
 	
-	return nil
+	return remark, nil
 		
 }
 
