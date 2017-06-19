@@ -10,8 +10,13 @@ import (
 	txutil "gamecenter.mobi/paicode/transactions"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
+ 
+const (
+	FundNouncePrefix = "FNC"
+	
+	nounce_reuse_interval_sec int64 = 2592000 //30 days
+)
 
-const FundNouncePrefix = "FNC"
 
 type NounceManager struct{
 	Tsnow *timestamp.Timestamp
@@ -47,21 +52,17 @@ func (m *NounceManager) CheckfundNounce(stub shim.ChaincodeStubInterface, from s
 		return false, err
 	}
 	
-	if data != nil{
+	if data != nil{		
 		//nounce can be reused if it has finished for a very long time (nounce_reuse_interval_sec)
 		ts := &timestamp.Timestamp{}
 		err = proto.Unmarshal(data, ts)
 		if err == nil{
-			logger.Debug("check nounce's timestamp:", ts, "vs now:", m.Tsnow)
-			
-			if ts.Seconds + nounce_reuse_interval_sec > m.Tsnow.Seconds{
-				return true, nil
-			}else{
-				return false, nil
-			}
+			logger.Warning("May encounter a replay tx, original is in", ts)			
+		}else{
+			logger.Error("Recorded nounce is invalid:", err)
 		}
 		
-		return false, err
+		return true, err
 	}
 	
 	return false, nil

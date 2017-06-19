@@ -129,10 +129,6 @@ func init(){
 	UserTxMap[UserFund] = &fundHandler{}
 }
 
-const (
-	nounce_reuse_interval_sec int64 = 2592000 //30 days
-)
-
 func acquireTsNow(stub shim.ChaincodeStubInterface) *timestamp.Timestamp{
 	tsnow, err := stub.GetTxTimestamp()
 	if tsnow == nil || err != nil{
@@ -144,7 +140,7 @@ func acquireTsNow(stub shim.ChaincodeStubInterface) *timestamp.Timestamp{
 	}	
 }
 
-func (f *fundHandler) HandleUserTx(uid string, ud *persistpb.UserData, stub shim.ChaincodeStubInterface, 
+func (f *fundHandler) Handle(uid string, ud *persistpb.UserData, stub shim.ChaincodeStubInterface, 
 	args []string) (outud map[string]*persistpb.UserData, err error) {
 	
 	fdetail := &FundTx{}

@@ -9,7 +9,6 @@ import (
 	
 	"github.com/op/go-logging"
 	"github.com/hyperledger/fabric/core/chaincode/shim"	
-	proto "github.com/golang/protobuf/proto"
 	
 	persistpb "gamecenter.mobi/paicode/protos"
 	sec "gamecenter.mobi/paicode/chaincode/security" 
@@ -49,44 +48,6 @@ func (s *paiStatus) init(set *persistpb.DeploySetting){
 func (s *paiStatus) set(set *persistpb.DeploySetting){
 	 set.TotalPais = s.totalPai
 	 set.UnassignedPais = s.frozenPai
-}
-
-func (t *PaiChaincode) saveGlobalStatus(stub shim.ChaincodeStubInterface) error{
-	t.globalLock.RLock()
-	defer t.globalLock.RUnlock()
-	
-	if !t.cacheOK {
-		return errors.New("FATAL: Invalid cache")
-	}	
-	
-	//a Write After Read process
-	rawset, err := stub.GetState(global_setting_entry)
-	if err != nil{
-		return err
-	}
-	
-	if rawset == nil{
-		t.cacheOK = false
-		return errors.New("FATAL: No global setting found")
-	}
-	
-	setting := &persistpb.DeploySetting{}
-	err = proto.Unmarshal(rawset, setting)
-	
-	if err != nil{
-		return err
-	}
-	
-	t.paistat.set(setting)
-	
-	logger.Info("Save current global setting:", setting)	
-	
-	rawset, err = proto.Marshal(setting)
-	if err != nil{
-		return err
-	}
-	
-	return stub.PutState(global_setting_entry, rawset)	
 }
 
 func (t *PaiChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
@@ -137,7 +98,23 @@ func (t *PaiChaincode) Query(stub shim.ChaincodeStubInterface, function string, 
 		return nil, err
 	}
 
-	return nil, nil
+	h, ok := tx.QueryMap[function]
+	if !ok{
+		return nil, errors.New(fmt.Sprint("Not a registered function:", function))
+	}
+
+	rolePriv, _ := sec.Helper.GetPrivilege(stub) //region is never used
+	
+	funcGrp := function[:tx.FuncPrefix]	
+	expectPriv := privilege_Def[funcGrp]
+	
+	//check priviledge
+	if !sec.Helper.VerifyPrivilege(rolePriv, expectPriv){ 
+		sec.Helper.ActiveAudit(stub, fmt.Sprintf("Call function <%s> without require priviledge", function))
+		return nil, errors.New("No priviledge")
+	}
+
+	return h.Handle(stub, args)
 }
 
 func main() {

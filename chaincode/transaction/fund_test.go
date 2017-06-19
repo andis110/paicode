@@ -124,7 +124,7 @@ func TestFundTx(t *testing.T){
 	
 	//first tx
 	stub.MockTransactionStart("1")
-	out, err := h.HandleUserTx(uid, &pb.UserData{1000, inpk, nil, "Heaven", nil}, stub, args)
+	out, err := h.Handle(uid, &pb.UserData{1000, inpk, nil, "Heaven", nil}, stub, args)
 	if err != nil{
 		t.Fatal(err)
 	}
@@ -144,7 +144,7 @@ func TestFundTx(t *testing.T){
 	
 	//duplicated tx, should fail
 	stub.MockTransactionStart("1")
-	out, err = h.HandleUserTx(uid, &pb.UserData{900, inpk, nil, "Heaven", nil}, stub, args)
+	out, err = h.Handle(uid, &pb.UserData{900, inpk, nil, "Heaven", nil}, stub, args)
 	if err == nil{
 		t.Fatal("Not recognize duplicated tx")
 	}
@@ -165,7 +165,7 @@ func TestFundTx(t *testing.T){
 	
 	//another tx, but public key is not match, should fail
 	stub.MockTransactionStart("1")
-	out, err = h.HandleUserTx(uid, &pb.UserData{900, yaprivk.GenPublicKeyMsg(), nil, "Heaven", nil}, stub, args)
+	out, err = h.Handle(uid, &pb.UserData{900, yaprivk.GenPublicKeyMsg(), nil, "Heaven", nil}, stub, args)
 	if err == nil{
 		t.Fatal("Not recognize wrong publickey")
 	}
@@ -174,7 +174,7 @@ func TestFundTx(t *testing.T){
 	
 	//another tx, but no enough pais, should fail
 	stub.MockTransactionStart("1")
-	out, err = h.HandleUserTx(uid, &pb.UserData{10, inpk, nil, "Heaven", nil}, stub, args)
+	out, err = h.Handle(uid, &pb.UserData{10, inpk, nil, "Heaven", nil}, stub, args)
 	if err == nil{
 		t.Fatal("Not recognize not enough pais")
 	}
@@ -183,7 +183,7 @@ func TestFundTx(t *testing.T){
 	
 	//another tx
 	stub.MockTransactionStart("1")
-	out, err = h.HandleUserTx(uid, &pb.UserData{900, inpk, nil, "Heaven", nil}, stub, args)
+	out, err = h.Handle(uid, &pb.UserData{900, inpk, nil, "Heaven", nil}, stub, args)
 	if err != nil{
 		t.Fatal(err)
 	}
@@ -212,7 +212,7 @@ func TestFundTx(t *testing.T){
 	
 	//yet another tx, make pai become zero
 	stub.MockTransactionStart("1")
-	out, err = h.HandleUserTx(uid, &pb.UserData{100, inpk, nil, "Heaven", nil}, stub, args)
+	out, err = h.Handle(uid, &pb.UserData{100, inpk, nil, "Heaven", nil}, stub, args)
 	if err != nil{
 		t.Fatal(err)
 	}

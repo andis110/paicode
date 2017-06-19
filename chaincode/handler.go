@@ -51,6 +51,37 @@ func (t *PaiChaincode) updateCache(stub shim.ChaincodeStubInterface) error{
 	return nil
 }
 
+func saveGlobalStatus(s *paiStatus, stub shim.ChaincodeStubInterface) error{	
+	
+	//a Write After Read process
+	rawset, err := stub.GetState(global_setting_entry)
+	if err != nil{
+		return err
+	}
+	
+	if rawset == nil{
+		return errors.New("FATAL: No global setting found")
+	}
+	
+	setting := &persistpb.DeploySetting{}
+	err = proto.Unmarshal(rawset, setting)
+	
+	if err != nil{
+		return err
+	}
+	
+	s.set(setting)
+	
+	logger.Info("Save current global setting:", setting)	
+	
+	rawset, err = proto.Marshal(setting)
+	if err != nil{
+		return err
+	}
+	
+	return stub.PutState(global_setting_entry, rawset)	
+}
+
 func (t *PaiChaincode) handleInit(stub shim.ChaincodeStubInterface, args []string) error{
 	if args == nil{
 		return errors.New("No init argument")	
@@ -112,13 +143,55 @@ func (t *PaiChaincode) handleInit(stub shim.ChaincodeStubInterface, args []strin
 	return t.updateCache(stub)
 }
 
+func (t *PaiChaincode) handleAdminManageFuncs(stub shim.ChaincodeStubInterface, function string, args []string) error{
+	
+	h, ok := tx.AdminMap[function]
+	if !ok{
+		return errors.New(fmt.Sprint("Not a registered function:", function))
+	}
+	
+	t.globalLock.Lock()
+	defer t.globalLock.Unlock()
+	
+	globalset := &persistpb.DeploySetting{}
+	t.paistat.set(globalset)
+	
+	globalout, outuds, err := h.Handle(globalset, stub, args)
+	
+	if err != nil{
+		return err
+	}
+	
+	//update cache
+	t.paistat.init(globalout)
+		
+	err = saveGlobalStatus(&t.paistat, stub)
+	if err != nil{
+		return err
+	}	
+	
+	for id, ud := range outuds{
+		raw, err := proto.Marshal(ud)
+		if err != nil{
+			return err
+		}
+		
+		err = stub.PutState(id, raw)
+		if err != nil{
+			return err
+		}
+	}
+	
+	return nil	
+}
+
 func (t *PaiChaincode) handleUserFuncs(stub shim.ChaincodeStubInterface, function string, region string, args []string) error{
 	
 	h, ok := tx.UserTxMap[function]
 	if !ok{
 		return errors.New(fmt.Sprint("Not a registered function:", function))
 	}
-	
+
 	cs := txutil.UserTxConsumer{}
 	err := cs.ParseArgumentsFirst(args)
 	if err != nil{
@@ -139,7 +212,7 @@ func (t *PaiChaincode) handleUserFuncs(stub shim.ChaincodeStubInterface, functio
 	err = proto.Unmarshal(raw, userdata)	
 	if err != nil{
 		return err
-	}		
+	}
 	
 	if function == tx.UserRegPublicKey {
 		/*region is set here*/
@@ -155,7 +228,7 @@ func (t *PaiChaincode) handleUserFuncs(stub shim.ChaincodeStubInterface, functio
 		}
 	}
 	
-	outuds, err := h.HandleUserTx(cs.GetUserId(), userdata, stub, args)
+	outuds, err := h.Handle(cs.GetUserId(), userdata, stub, args)
 	if err != nil{
 		return err
 	}

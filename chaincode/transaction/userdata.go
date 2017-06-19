@@ -23,7 +23,7 @@ func init(){
 	UserTxMap[UserRegPublicKey] = &regPublicKeyHandler{}
 }
 
-func (f *regPublicKeyHandler) HandleUserTx(uid string, ud *persistpb.UserData, stub shim.ChaincodeStubInterface, 
+func (f *regPublicKeyHandler) Handle(uid string, ud *persistpb.UserData, stub shim.ChaincodeStubInterface, 
 	args []string) (outud map[string]*persistpb.UserData, err error) {
 	
 	cs := txutil.UserTxConsumer{PublicKey: nil}

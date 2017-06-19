@@ -9,7 +9,7 @@ import (
 func TestMgrPrivk(t *testing.T) {
 	mgr := accountManager{wallet.CreateSimpleManager("")}
 	
-	err := mgr.GenPrivkey("test1")
+	_, err := mgr.GenPrivkey("test1")
 	if err != nil{
 		t.Fatal(err)
 	}

@@ -28,6 +28,7 @@ type UserTxProducer struct{
 
 const(
 	SecurityNounceLen int = 16
+	TxTimeStampExpireSec int = 604800 //7 days
 )
 
 func (m *UserTxProducer) helpMakingNounce(){

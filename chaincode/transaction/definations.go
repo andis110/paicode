@@ -25,9 +25,25 @@ var UserFund string = User_funcs + "_FUND"
 var UserRegPublicKey string = User_funcs + "_REGPUBLICKEY"
 var UserAuthChaincode string = User_funcs + "_AUTHCHAINCODE"
 
+var QueryUser string = Query_funcs + "_USER"
+var QueryGlobal string = Query_funcs + "_GLOBAL"
+
+type AdminOrManageTx interface{
+	Handle(*persistpb.DeploySetting, shim.ChaincodeStubInterface, []string) (*persistpb.DeploySetting, map[string]*persistpb.UserData, error) 
+}
+
+var AdminMap = map[string]AdminOrManageTx{} 
+
 type UserTx interface{
-	HandleUserTx(string, *persistpb.UserData, shim.ChaincodeStubInterface, []string) (map[string]*persistpb.UserData, error) 
+	Handle(string, *persistpb.UserData, shim.ChaincodeStubInterface, []string) (map[string]*persistpb.UserData, error) 
 }
 
 var UserTxMap = map[string]UserTx{} 
+
+type Query interface{
+	Handle(shim.ChaincodeStubInterface, []string) ([]byte, error) 
+}
+
+var QueryMap = map[string]Query{} 
+
 
