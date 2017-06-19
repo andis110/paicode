@@ -29,7 +29,7 @@ type PaiChaincode struct {
 
 const (
 
-	global_setting_entry string = "global_setting"
+	global_setting_entry string = tx.Global_setting_entry
 	
 )
 

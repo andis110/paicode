@@ -10,6 +10,8 @@ import (
 //each function name has a 4-bytes prefix
 const (
 	
+	Global_setting_entry string = "global_setting"
+	
 	FuncPrefix int = 4
 	
 	Admin_funcs string = "ADMN"
