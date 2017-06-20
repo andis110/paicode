@@ -5,6 +5,7 @@ import (
 	_ "errors"
 	
 	"github.com/spf13/cobra"
+	"github.com/hyperledger/fabric/peerex"
 )
 
 var rpcCmd = &cobra.Command{
@@ -12,14 +13,17 @@ var rpcCmd = &cobra.Command{
 	Short: fmt.Sprintf("rpc commands."),
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error{
 		
-		if default_conn.C != nil{
+		if defClient.IsRpcReady(){
 			return nil
 		}
 		
-		err := default_conn.Dialdefault()
+		conn := peerex.ClientConn{}
+		err := conn.Dialdefault()
 		if err != nil{
 			return err
-		}
+		}		
+		
+		defClient.PrepareRpc(conn) 
 		return nil
 	},
 }
@@ -30,10 +34,16 @@ var userCmd = &cobra.Command{
 }
 
 var registerCmd = &cobra.Command{
-	Use:       "register <remark>",
+	Use:       "register",
 	Short:     fmt.Sprintf("Register a public key"),
 	RunE: func(cmd *cobra.Command, args []string) error{
 		
+		msg, err := defClient.Rpc.Registry(args...)
+		if err != nil{
+			return err
+		}
+		
+		fmt.Print("Registry public key ok, TX id is", msg)
 		return nil
 	},
 }

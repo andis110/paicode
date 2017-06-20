@@ -91,14 +91,14 @@ func (m* accountManager) ListKeyData(args ...string) [][2]string{
 }
 
 //[import string], <remark>
-func (m* accountManager) ImportPrivkey(args ...string) error{
+func (m* accountManager) ImportPrivkey(args ...string) (string, error){
 	
 	if len(args) == 0{
-		return errors.New("Need import string")
+		return "", errors.New("Need import string")
 	}	
 	
 	if len(args) > 2{
-		return errors.New(fmt.Sprint("Could not recognize", args[2:]))
+		return "", errors.New(fmt.Sprint("Could not recognize", args[2:]))
 	}
 	
 	var remark string		
@@ -110,11 +110,11 @@ func (m* accountManager) ImportPrivkey(args ...string) error{
 	
 	k, err := wallet.DefaultWallet.ImportPrivKey(args[0])
 	if err != nil{
-		return err
+		return "", err
 	}
 	
 	m.KeyMgr.AddPrivKey(remark, k)
 	
-	return nil
+	return remark, nil
 }
 

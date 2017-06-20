@@ -21,6 +21,10 @@ type Privkey struct{
 	underlyingKey *paicrypto.ECDSAPriv
 }
 
+func (k Privkey) IsValid() bool{
+	return k.underlyingKey != nil
+}
+
 func (k Privkey) GenPublicKeyMsg() *pb.PublicKey{
 	ret, err := txutil.MakePbFromPrivKey(k.underlyingKey)
 	if err != nil{

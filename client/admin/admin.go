@@ -1,4 +1,4 @@
-package main
+package main 
 
 import (
 	"os"
@@ -7,7 +7,6 @@ import (
 	_ "strings"
 	
 	arghelper "github.com/mattn/go-shellwords"
-	clicore "gamecenter.mobi/paicode/client"
 	
 	"github.com/spf13/cobra"
 	"github.com/hyperledger/fabric/peerex"
@@ -16,8 +15,6 @@ import (
 var mainCmd = &cobra.Command{
 	Use: ">",
 }
-
-var defClient *clicore.ClientCore 
 
 func main() {
 	
@@ -28,13 +25,8 @@ func main() {
 		panic(err)		
 	}
 	
-	defClient = clicore.NewClientCore()
-	
-	defer defClient.ReleaseRpc()
-	
 	fmt.Print("Starting .... ")
-	mainCmd.AddCommand(rpcCmd)
-	mainCmd.AddCommand(accountCmd)
+	mainCmd.AddCommand(initDeployCmd())
 	
 	mainCmd.SetArgs([]string{"help"})
 	err = mainCmd.Execute()
@@ -78,3 +70,4 @@ func main() {
 	fmt.Println("Exiting ...")	
 	
 }
+

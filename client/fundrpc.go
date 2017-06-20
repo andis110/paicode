@@ -8,11 +8,13 @@ import (
 	"gamecenter.mobi/paicode/wallet"
 	tx "gamecenter.mobi/paicode/chaincode/transaction"
 	txutil "gamecenter.mobi/paicode/transactions"
+	pb "gamecenter.mobi/paicode/protos"
+	
 	"github.com/hyperledger/fabric/peerex"
 )
 
 type rpcManager struct{
-	PrivKey    wallet.Privkey
+	PrivKey    *wallet.Privkey
 	Rpcbuilder *peerex.RpcBuilder
 }
 
@@ -20,13 +22,12 @@ const(
 	fundNounceMaxLen int = 256
 )
 
-
 //funding: [to:addr] [amount] <message>
 func (m* rpcManager) Fund(args ...string) (string, error){
 	if len(args) < 2{
 		return "", errors.New("No required arguments")
 	}
-	
+		
 	b, err := txutil.AddrHelper.VerifyUserId(args[0])
 	if !b{
 		return "", err
@@ -57,6 +58,29 @@ func (m* rpcManager) Fund(args ...string) (string, error){
 	}	
 	
 	m.Rpcbuilder.Function = tx.UserFund
+	return m.Rpcbuilder.Fire(rpcargs)
+		
+}
+
+//registry: <no input>
+func (m* rpcManager) Registry(args ...string) (string, error){
+	if len(args) != 0{
+		return "", errors.New("Not require arguments")
+	}
+	
+	if m.PrivKey == nil || m.PrivKey.IsValid() {
+		return "", errors.New("Key is not applied")		
+	}
+	
+	pd := &txutil.UserTxProducer{PrivKey: m.PrivKey.K}
+	regmsg := &pb.RegPublicKey{m.PrivKey.GenPublicKeyMsg()}
+	
+	rpcargs, err := pd.MakeArguments(regmsg)
+	if err != nil{
+		return "", err
+	}
+	
+	m.Rpcbuilder.Function = tx.UserRegPublicKey
 	return m.Rpcbuilder.Fire(rpcargs)
 		
 }

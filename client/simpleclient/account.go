@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	_ "errors"
+	"errors"
 	
 	"github.com/spf13/cobra"
 )
@@ -90,16 +90,40 @@ var importPrivkeyCmd = &cobra.Command{
 	Short:     fmt.Sprintf("Import a privkey"),
 	RunE: func(cmd *cobra.Command, args []string) error{
 		
-		err := defClient.Accounts.ImportPrivkey(args...)
+		ret, err := defClient.Accounts.ImportPrivkey(args...)
 		
 		if err != nil{
 			return err
 		}
 		
-		fmt.Println("Done")		
+		if len(args) < 1{
+			fmt.Println("Import done as", ret)
+		}else{
+			fmt.Println("Import done")
+		}	
 		return nil	
 	},
 }
+
+var usePrivkeyCmd = &cobra.Command{
+	Use:       "use [remark]",
+	Short:     fmt.Sprintf("Use a privkey for rpc calling"),
+	RunE: func(cmd *cobra.Command, args []string) error{
+		
+		if len(args) != 1{
+			return errors.New("Invalid argument count")
+		}
+		
+		key, err := defClient.Accounts.KeyMgr.LoadPrivKey(args[0])
+		if err != nil{
+			return err
+		}
+		
+		defClient.Rpc.PrivKey = key	
+		return nil	
+	},
+}
+
 
 func init(){
 	accountCmd.AddCommand(genPrivkeyCmd)
