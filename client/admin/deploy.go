@@ -68,6 +68,10 @@ func parseAssignDetail() ([]*pb.PreassignData, error){
 var deployCmd = &cobra.Command{
 	Use:   "deploy [options...]",
 	Short: fmt.Sprintf("deploy chaincode to fabric"),	
+	
+	PersistentPreRun: func(cmd *cobra.Command, args []string){
+		*assignedDetail = []string{}
+	},
 }
 
 var deployOutCmd = &cobra.Command{

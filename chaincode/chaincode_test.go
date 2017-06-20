@@ -19,11 +19,14 @@ import (
 	txutil "gamecenter.mobi/paicode/transactions"	
 )
 
-const defaultNetCode int32 = 13
+func init(){
+	txutil.AddrHelper = txutil.AddressHelper(13)
+}
+
 
 func makeInit(stub *shim.MockStub, total int64, preassign map[string]int64) error{
 	
-	initset := &pb.InitChaincode{&pb.DeploySetting{true, defaultNetCode, total, total}, nil}
+	initset := &pb.InitChaincode{&pb.DeploySetting{true, int32(txutil.AddrHelper), total, total}, nil}
 	
 	for k, v := range preassign{
 		initset.PreassignedUser = append(initset.PreassignedUser, &pb.PreassignData{k, v})
@@ -54,7 +57,7 @@ func checkGlobalPai(t *testing.T, stub *shim.MockStub, expect int64 ) {
 		t.Fatal("Unmarshal fail", err)
 	}
 	
-	if !ret.DebugMode || defaultNetCode != ret.NetworkCode || expect != ret.UnassignedPais{
+	if !ret.DebugMode || int32(txutil.AddrHelper) != ret.NetworkCode || expect != ret.UnassignedPais{
 		t.Fatal("Not correct global setting", ret)
 	}
 }
@@ -106,13 +109,13 @@ func TestPaichaincode_InitPreset(t *testing.T) {
 	pcc := new(PaiChaincode)
 	stub := shim.NewMockStub("PaicodeTest", pcc)
 
-	_, err := stub.MockInit("1", "init", []string{"CgwIARABUMCEPVjAhD0SKAoiQWM5ZWdKUDVRaUFNM1dMbmZNeEE3cUVEWk9lYkdMVVR4QRCgwh4SKAoiQWM5ZWdKUDVRaUFNM1dMbmZNeEE3cUVEWk9lYkdMVVR4QRCgwh4="})
+	_, err := stub.MockInit("1", "init", []string{"CgwIARANUMCEPVjAhD0SKAoiRFhQbFJtNGxxeTNzTVEyeHVrNzJWUExPYkp3TGlwbTdWQRDQhgMSKAoiRFhQbFJtNGxxeTNzTVEyeHVrNzJWUExPYkp3TGlwbTdWQRDQhgMSKAoiRFhQbFJtNGxxeTNzTVEyeHVrNzJWUExPYkp3TGlwbTdWQRDQhgMSKAoiRFhQbFJtNGxxeTNzTVEyeHVrNzJWUExPYkp3TGlwbTdWQRDQhgM="})
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	checkGlobalPai(t, stub, 500000)
-	checkUser(t, stub, "Ac9egJP5QiAM3WLnfMxA7qEDZOebGLUTxA", 500000)
+	checkUser(t, stub, "DXPlRm4lqy3sMQ2xuk72VPLObJwLipm7VA", 500000)
 }
 
 type privKey struct{
