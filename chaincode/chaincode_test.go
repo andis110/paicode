@@ -102,6 +102,19 @@ func TestPaichaincode_InitPreassign(t *testing.T) {
 	checkUser(t, stub, "dummy2", 10)
 }
 
+func TestPaichaincode_InitPreset(t *testing.T) {
+	pcc := new(PaiChaincode)
+	stub := shim.NewMockStub("PaicodeTest", pcc)
+
+	_, err := stub.MockInit("1", "init", []string{"CgwIARABUMCEPVjAhD0SKAoiQWM5ZWdKUDVRaUFNM1dMbmZNeEE3cUVEWk9lYkdMVVR4QRCgwh4SKAoiQWM5ZWdKUDVRaUFNM1dMbmZNeEE3cUVEWk9lYkdMVVR4QRCgwh4="})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	checkGlobalPai(t, stub, 500000)
+	checkUser(t, stub, "Ac9egJP5QiAM3WLnfMxA7qEDZOebGLUTxA", 500000)
+}
+
 type privKey struct{
 	k 			*ecdsa.PrivateKey
 	underlyingK	*paicrypto.ECDSAPriv
