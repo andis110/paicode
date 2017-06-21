@@ -106,10 +106,15 @@ func TestPaichaincode_InitPreassign(t *testing.T) {
 }
 
 func TestPaichaincode_InitPreset(t *testing.T) {
+	
+	if int(txutil.AddrHelper) != 13{
+		t.Skip("Not match network code for this test, require 13")
+	}
+	
 	pcc := new(PaiChaincode)
 	stub := shim.NewMockStub("PaicodeTest", pcc)
 
-	_, err := stub.MockInit("1", "init", []string{"CgwIARANUMCEPVjAhD0SKAoiRFhQbFJtNGxxeTNzTVEyeHVrNzJWUExPYkp3TGlwbTdWQRDQhgMSKAoiRFhQbFJtNGxxeTNzTVEyeHVrNzJWUExPYkp3TGlwbTdWQRDQhgMSKAoiRFhQbFJtNGxxeTNzTVEyeHVrNzJWUExPYkp3TGlwbTdWQRDQhgMSKAoiRFhQbFJtNGxxeTNzTVEyeHVrNzJWUExPYkp3TGlwbTdWQRDQhgM="})
+	_, err := stub.MockInit("1", "init", []string{"CgwIARANUMCEPVjAhD0SKAoiRFhQbFJtNGxxeTNzTVEyeHVrNzJWUExPYkp3TGlwbTdWQRCgwh4="})
 	if err != nil {
 		t.Fatal(err)
 	}

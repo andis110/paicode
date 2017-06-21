@@ -34,7 +34,7 @@ var listPrivkeyCmd = &cobra.Command{
 }
 
 var queryPrivkeyCmd = &cobra.Command{
-	Use:       "query [remark]",
+	Use:       "query <remark>",
 	Short:     fmt.Sprintf("query a key"),
 	RunE: func(cmd *cobra.Command, args []string) error{
 		
@@ -50,7 +50,7 @@ var queryPrivkeyCmd = &cobra.Command{
 }
 
 var genPrivkeyCmd = &cobra.Command{
-	Use:       "generate <remark>",
+	Use:       "generate [remark]",
 	Short:     fmt.Sprintf("generate a privkey"),
 	Long:      fmt.Sprintf(`generate a privkey and save it with the name of remark.`),
 	RunE: func(cmd *cobra.Command, args []string) error{
@@ -70,7 +70,7 @@ var genPrivkeyCmd = &cobra.Command{
 }
 
 var dumpPrivkeyCmd = &cobra.Command{
-	Use:       "dump [remark]",
+	Use:       "dump <remark>",
 	Short:     fmt.Sprintf("dump out a privkey"),
 	RunE: func(cmd *cobra.Command, args []string) error{
 		
@@ -86,7 +86,7 @@ var dumpPrivkeyCmd = &cobra.Command{
 }
 
 var importPrivkeyCmd = &cobra.Command{
-	Use:       "import [dump string] <remark>",
+	Use:       "import <dump string> [remark]",
 	Short:     fmt.Sprintf("Import a privkey"),
 	RunE: func(cmd *cobra.Command, args []string) error{
 		
@@ -106,7 +106,7 @@ var importPrivkeyCmd = &cobra.Command{
 }
 
 var usePrivkeyCmd = &cobra.Command{
-	Use:       "use [remark]",
+	Use:       "use <remark>",
 	Short:     fmt.Sprintf("Use a privkey for rpc calling"),
 	RunE: func(cmd *cobra.Command, args []string) error{
 		
@@ -120,6 +120,7 @@ var usePrivkeyCmd = &cobra.Command{
 		}
 		
 		defClient.Rpc.PrivKey = key	
+		fmt.Println("Done")
 		return nil	
 	},
 }
@@ -131,4 +132,5 @@ func init(){
 	accountCmd.AddCommand(listPrivkeyCmd)
 	accountCmd.AddCommand(queryPrivkeyCmd)
 	accountCmd.AddCommand(importPrivkeyCmd)
+	accountCmd.AddCommand(usePrivkeyCmd)
 }

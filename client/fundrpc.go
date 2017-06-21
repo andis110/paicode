@@ -22,7 +22,7 @@ const(
 	fundNounceMaxLen int = 256
 )
 
-//funding: [to:addr] [amount] <message>
+//funding: <to:addr> <amount> [message]
 func (m* rpcManager) Fund(args ...string) (string, error){
 	if len(args) < 2{
 		return "", errors.New("No required arguments")
@@ -33,7 +33,7 @@ func (m* rpcManager) Fund(args ...string) (string, error){
 		return "", err
 	}
 	
-	i, err := strconv.Atoi(args[2])
+	i, err := strconv.Atoi(args[1])
 	if err != nil{
 		return "", err
 	}
@@ -68,7 +68,7 @@ func (m* rpcManager) Registry(args ...string) (string, error){
 		return "", errors.New("Not require arguments")
 	}
 	
-	if m.PrivKey == nil || m.PrivKey.IsValid() {
+	if m.PrivKey == nil || !m.PrivKey.IsValid() {
 		return "", errors.New("Key is not applied")		
 	}
 	

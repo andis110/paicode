@@ -33,6 +33,10 @@ func initDeployCmd() *cobra.Command{
 	return deployCmd
 }
 
+func cleanDeployFlags(){
+	*assignedDetail = []string{}
+}
+
 func parseAssignDetail() ([]*pb.PreassignData, error){
 	
 	addrh := txutil.AddressHelper(*networkCode)
@@ -69,9 +73,6 @@ var deployCmd = &cobra.Command{
 	Use:   "deploy [options...]",
 	Short: fmt.Sprintf("deploy chaincode to fabric"),	
 	
-	PersistentPreRun: func(cmd *cobra.Command, args []string){
-		*assignedDetail = []string{}
-	},
 }
 
 var deployOutCmd = &cobra.Command{

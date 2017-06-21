@@ -63,6 +63,7 @@ func main() {
 			}
 			
 			ln = ""
+			cleanDeployFlags()
 			fmt.Println("Continue to next command:")
 		}
 	}

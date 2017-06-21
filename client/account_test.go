@@ -24,12 +24,12 @@ func TestMgrPrivk(t *testing.T) {
 		t.Fatal("Dump unexist key")
 	}
 	
-	err = mgr.ImportPrivkey(dstr)
+	_, err = mgr.ImportPrivkey(dstr)
 	if err != nil{
 		t.Fatal(err)
 	}
 	
-	err = mgr.ImportPrivkey(dstr, "test2")
+	_, err = mgr.ImportPrivkey(dstr, "test2")
 	if err != nil{
 		t.Fatal(err)
 	}
