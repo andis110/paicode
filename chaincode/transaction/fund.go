@@ -154,7 +154,7 @@ func (f *fundHandler) Handle(uid string, ud *persistpb.UserData, stub shim.Chain
 	if fdetail.Invoked {
 		var isauth bool = false
 		logger.Debug("fund tx is invoked") 
-		for uauth := range ud.GetAuthcodes(){
+		for uauth := range ud.Authcodes{
 			if uint(uauth) == fdetail.InvokedCode{
 				isauth = true
 				break;

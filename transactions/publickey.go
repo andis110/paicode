@@ -17,8 +17,8 @@ func (pk PublicKey) ECDSAPublicKey() *ecdsa.PublicKey{
 		return nil
 	}
 	
-	return &ecdsa.PublicKey{curve, big.NewInt(0).SetBytes(pk.P.GetX()),
-		big.NewInt(0).SetBytes(pk.P.GetY())}	
+	return &ecdsa.PublicKey{curve, big.NewInt(0).SetBytes(pk.P.X),
+		big.NewInt(0).SetBytes(pk.P.Y)}	
 }
 
 

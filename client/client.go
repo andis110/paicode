@@ -10,8 +10,11 @@ type ClientCore struct{
 	Rpc		 rpcManager
 }
 
-func NewClientCore() *ClientCore{
-	return &ClientCore{Accounts: accountManager{wallet.CreateSimpleManager("")}}
+func NewClientCore(config *peerex.GlobalConfig) *ClientCore{
+	
+	walletmgr := wallet.CreateSimpleManager(config.GetPeerFS() + "wallet.dat")
+	
+	return &ClientCore{Accounts: accountManager{walletmgr}}
 }
 
 func (c *ClientCore) IsRpcReady() bool{

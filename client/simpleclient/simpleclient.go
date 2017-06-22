@@ -17,24 +17,40 @@ var mainCmd = &cobra.Command{
 	Use: ">",
 }
 
+var exitCmd = &cobra.Command{
+	Use: "exit",
+	Run: func(cmd *cobra.Command, args []string){
+		shouldExit = true
+	},
+}
+
 var defClient *clicore.ClientCore 
+var shouldExit bool = false
 
 func main() {
 	
-	config := peerex.GlobalConfig{}
+	config := &peerex.GlobalConfig{}
 	err := config.InitGlobal()
 	
 	if err != nil{
 		panic(err)		
 	}
 	
-	defClient = clicore.NewClientCore()
+	err = os.MkdirAll(config.GetPeerFS(), 0777)
+	if err != nil{
+		panic(err)
+	}	
+	
+	defClient = clicore.NewClientCore(config)
+	defClient.Accounts.KeyMgr.Load()
+	defer defClient.Accounts.KeyMgr.Persist()
 	
 	defer defClient.ReleaseRpc()
 	
 	fmt.Print("Starting .... ")
 	mainCmd.AddCommand(rpcCmd)
 	mainCmd.AddCommand(accountCmd)
+	mainCmd.AddCommand(exitCmd)
 	
 	mainCmd.SetArgs([]string{"help"})
 	err = mainCmd.Execute()
@@ -68,6 +84,10 @@ func main() {
 				if err != nil{
 					fmt.Println("Command error:", err)		
 				}				
+			}
+			
+			if shouldExit {
+				break
 			}
 			
 			ln = ""
