@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"sync"
 	"encoding/gob"
 	paicrypto "gamecenter.mobi/paicode/crypto"
 )
@@ -12,6 +13,7 @@ import (
 type simpleManager struct{
 	PersistFile string
 	keyData		map[string]*Privkey
+	lock		sync.RWMutex
 }
 
 func CreateSimpleManager(fpath string) *simpleManager{
@@ -19,10 +21,17 @@ func CreateSimpleManager(fpath string) *simpleManager{
 }
 
 func (m *simpleManager) AddPrivKey(remark string, privk *Privkey){
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	
 	m.keyData[remark] = privk
 }
 
 func (m *simpleManager) LoadPrivKey(remark string) (*Privkey, error){
+	
+	m.lock.RLock()
+	defer m.lock.RUnlock()	
+	
 	k, ok := m.keyData[remark]
 	if !ok {
 		return nil, errors.New("No this key")
@@ -32,7 +41,18 @@ func (m *simpleManager) LoadPrivKey(remark string) (*Privkey, error){
 }
 
 func (m *simpleManager) ListAll() (map[string]*Privkey, error){
-	return m.keyData, nil
+	
+	m.lock.RLock()
+	defer m.lock.RUnlock()		
+	
+	//we do a deep copy
+	copiedmap := map[string]*Privkey{}
+	
+	for k, v := range m.keyData{
+		copiedmap[k] = v
+	}
+	
+	return copiedmap, nil
 }
 
 type persistElem struct{
@@ -91,6 +111,9 @@ func (m *simpleManager) Load() (err error){
 }
 
 func (m *simpleManager) Persist() error{
+		
+	m.lock.RLock()
+	defer m.lock.RUnlock()		
 		
 	buf := bytes.NewBuffer(make([]byte, 0, 4096))
 	enc := gob.NewEncoder(buf)

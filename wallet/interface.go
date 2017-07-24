@@ -1,5 +1,7 @@
 package wallet
 
+//MUST suppport concurrency except for Load()
+
 type KeyManager interface {
 	
 	AddPrivKey(remark string, privk *Privkey)
