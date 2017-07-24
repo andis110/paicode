@@ -3,10 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/gocraft/web"
-
 	clicore "gamecenter.mobi/paicode/client"
-	
-
 )
 
 type GamepaiREST struct{
@@ -14,11 +11,22 @@ type GamepaiREST struct{
 }
 
 type AccountREST struct{
+	*GamepaiREST
 	shouldPersist bool
 }
 
 type RpcREST struct{
+	*GamepaiREST
 	workCore *clicore.RpcCore 
+}
+
+type RpcQueryREST struct{
+	*GamepaiREST
+}
+
+type restData struct{
+	Status string `json:"status"`
+	Data   interface{} `json:"data"`
 }
 
 func (s *GamepaiREST) SetResponseType(rw web.ResponseWriter, req *web.Request, next web.NextMiddlewareFunc) {
@@ -45,14 +53,19 @@ func (s *AccountREST) PersistAccount(rw web.ResponseWriter, req *web.Request, ne
 	} 
 }
 
-
 func (s *RpcREST) LoadRPC(rw web.ResponseWriter, req *web.Request, next web.NextMiddlewareFunc) {
 
-	s.workCore = clicore.RpcCoreFromClient(&defClient.Rpc)
-	kid := req.PathParams["id"]
+	err := req.ParseForm()
+	if err != nil{
+		panic(err)
+	}
+	
+	kid := req.Form.Get("id")
 	if kid == "" {
 		panic("Must specific id")
 	}
+	
+	s.workCore = clicore.RpcCoreFromClient(&defClient.Rpc)
 	
 	key, err := defClient.Accounts.KeyMgr.LoadPrivKey(kid)
 	if err != nil{
@@ -68,9 +81,9 @@ func buildRouter() *web.Router {
 	router := web.New(GamepaiREST{})
 
 	// Add middleware
-	router.Middleware((*GamepaiREST).SetResponseType)
+	router.Middleware((*GamepaiREST).SetResponseType) 
 
-	accRouter := router.Subrouter(AccountREST{false}, "/account")
+	accRouter := router.Subrouter(AccountREST{shouldPersist:false}, "/account")
 	accRouter.Middleware((*AccountREST).PersistAccount)
 	accRouter.Post("/", (*AccountREST).NewAcc)
 	accRouter.Get("/", (*AccountREST).ListAcc)
@@ -78,10 +91,13 @@ func buildRouter() *web.Router {
 	accRouter.Get("/dump/:id", (*AccountREST).DumpAcc)
 	
 	rpcRouter := router.Subrouter(RpcREST{}, "/rpc")
-	rpcRouter.Middleware((*RpcREST).LoadRPC)
-	rpcRouter.Get("/:id", (*RpcREST).Query) //query user	
-	rpcRouter.Post("/:id/registar", (*RpcREST).Registar)
-	rpcRouter.Post("/:id/fund", (*RpcREST).Fund)
+	rpcRouter.Middleware((*RpcREST).LoadRPC)	
+	rpcRouter.Post("/registar", (*RpcREST).Registar)
+	rpcRouter.Post("/fund", (*RpcREST).Fund)
+
+	chainRouter := router.Subrouter(RpcQueryREST{}, "/chain")
+	chainRouter.Get("/:addr", (*RpcQueryREST).QueryUser) 
+	chainRouter.Get("/", (*RpcQueryREST).QueryChain)
 
 	return router
 }

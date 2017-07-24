@@ -95,8 +95,8 @@ var offlinemode bool = false
 
 func main() {
 	
-	mainCmd.Flags().BoolVar(&debugmode, "debug", true, "run http server with debug output")
-	mainCmd.Flags().BoolVar(&offlinemode, "offline", true, "not communicate with other peers")
+	mainCmd.Flags().BoolVar(&debugmode, "debug", false, "run http server with debug output")
+	mainCmd.Flags().BoolVar(&offlinemode, "offline", false, "not communicate with other peers")
 	
 	mainCmd.AddCommand(exitCmd)	
 
