@@ -45,12 +45,13 @@ func (s *RpcQueryREST) QueryUser(rw web.ResponseWriter, req *web.Request){
 }
 
 func (s *RpcQueryREST) QueryChain(rw web.ResponseWriter, req *web.Request){
+	encoder := json.NewEncoder(rw)
 	ret, err := defClient.Rpc.QueryGlobal()
 	if err != nil{
-		panic(err)
+		rw.WriteHeader(http.StatusServiceUnavailable)
+		encoder.Encode(restData{"Query fail", err.Error()})
 	}
 
-	encoder := json.NewEncoder(rw)
 	data, err := reconstructRpcRet(ret)
 	if err != nil{
 		panic(err)
