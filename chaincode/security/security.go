@@ -50,14 +50,15 @@ func (sec *SecurityPolicy) ActiveAudit(stub shim.ChaincodeStubInterface, desc st
 }
 
 func (sec *SecurityPolicy) GetPrivilege(stub shim.ChaincodeStubInterface) (string, string){
-	
-	if sec.dbgMode{
-		return debugPrivilege, debugRegion
-	}
-	
+		
 	attrHandler, err := attr.NewAttributesHandlerImpl(stub)
 	if err != nil{
 		logger.Info("Create Attr handler fail", err)
+		
+		if sec.dbgMode{
+			return debugPrivilege, debugRegion
+		}		
+		
 		return noPrivilege, noRegion
 	}
 
@@ -78,6 +79,9 @@ func (sec *SecurityPolicy) GetPrivilege(stub shim.ChaincodeStubInterface) (strin
 		regionstr = string(region)
 	}
 	
+	if sec.dbgMode{
+		return debugPrivilege, debugRegion
+	}		
 	return privstr, regionstr
 	
 }
