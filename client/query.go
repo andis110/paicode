@@ -17,6 +17,15 @@ func (m* rpcManager) QueryUser(args ...string) ([]byte, error){
 		
 }
 
+func (m* rpcManager) QueryNode(args ...string) ([]byte, error){
+	if len(args) != 0{
+		return nil, errors.New("Not require arguments")
+	}
+	
+	m.Rpcbuilder.Function = tx.QueryNode
+	return m.Rpcbuilder.Query(nil)
+		
+}
 
 //queryglobal: <no input>
 func (m* rpcManager) QueryGlobal(args ...string) ([]byte, error){

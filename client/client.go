@@ -2,6 +2,7 @@ package client
 
 import (
 	"gamecenter.mobi/paicode/wallet"
+	sec "gamecenter.mobi/paicode/chaincode/security"
 	"github.com/hyperledger/fabric/peerex"
 )
 
@@ -41,6 +42,14 @@ func (c *ClientCore) IsRpcReady() bool{
 func (c *ClientCore) PrepareRpc(conn peerex.ClientConn){
 	c.Rpc.Rpcbuilder = &peerex.RpcBuilder{}
 	c.Rpc.Rpcbuilder.Conn = conn
+}
+
+func (c *ClientCore) SetRpcRegion(user string){
+	if c.Rpc.Rpcbuilder == nil{
+		panic("Must call PrepareRpc first")
+	}
+	c.Rpc.Rpcbuilder.Security = &peerex.SecurityPolicy{User: user, 
+		Attributes: []string{sec.Privilege_Attr, sec.Region_Attr}}
 }
 
 func (c *ClientCore) ReleaseRpc(){

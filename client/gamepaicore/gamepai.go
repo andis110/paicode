@@ -12,6 +12,7 @@ import (
 )
 
 const defPaicodeName string = "50637ebc88e9c0f2ea9d240784b491c4fde8ebd177a95fbc2f087312111affef1898fea4c267ff1084db244de6c6860f4367b700659d44b7b47fabda27347c23"
+const defRegion string = "GamepaiHQ"
 
 var defClient *clicore.ClientCore 
 
@@ -43,6 +44,7 @@ var mainCmd = &cobra.Command{
 			}			
 			
 			defClient.PrepareRpc(conn)
+			defClient.SetRpcRegion(defRegion)
 			defClient.Rpc.Rpcbuilder.ChaincodeName = defPaicodeName
 			restLogger.Infof("Start rpc, chaincode is %s", defClient.Rpc.Rpcbuilder.ChaincodeName)
 				

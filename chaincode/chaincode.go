@@ -103,17 +103,6 @@ func (t *PaiChaincode) Query(stub shim.ChaincodeStubInterface, function string, 
 		return nil, errors.New(fmt.Sprint("Not a registered function:", function))
 	}
 
-	rolePriv, _ := sec.Helper.GetPrivilege(stub) //region is never used
-	
-	funcGrp := function[:tx.FuncPrefix]	
-	expectPriv := privilege_Def[funcGrp]
-	
-	//check priviledge
-	if !sec.Helper.VerifyPrivilege(rolePriv, expectPriv){ 
-		sec.Helper.ActiveAudit(stub, fmt.Sprintf("Call function <%s> without require priviledge", function))
-		return nil, errors.New("No priviledge")
-	}
-
 	return h.Handle(stub, args)
 }
 

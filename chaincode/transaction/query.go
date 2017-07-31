@@ -7,6 +7,7 @@ import (
 	
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	proto "github.com/golang/protobuf/proto"
+	sec "gamecenter.mobi/paicode/chaincode/security" 
 	_ "gamecenter.mobi/paicode/transactions"
 	persistpb "gamecenter.mobi/paicode/protos"
 )
@@ -19,9 +20,15 @@ type queryGlobalHandler struct{
 	
 }
 
+type queryNodeHandler struct{
+	
+}
+
+
 func init(){
 	QueryMap[QueryUser] = &queryUserHandler{}
 	QueryMap[QueryGlobal] = &queryGlobalHandler{}
+	QueryMap[QueryNode] = &queryNodeHandler{}
 }
 
 func (_ *queryUserHandler) Handle(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
@@ -81,3 +88,14 @@ func (_ *queryGlobalHandler) Handle(stub shim.ChaincodeStubInterface, args []str
 	
 	return json.Marshal(setting)
 } 
+
+type nodeInfo struct{
+	Region string `json:"region"`
+	Priv string `json:"privilege"`
+}
+
+func (_ *queryNodeHandler) Handle(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
+	rolePriv, region := sec.Helper.GetPrivilege(stub)
+	
+	return json.Marshal(nodeInfo{Priv: rolePriv, Region: region})
+}

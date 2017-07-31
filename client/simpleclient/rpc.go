@@ -10,6 +10,7 @@ import (
 
 //the chaincode id of gamecenter.mobi/paicode/chaincode
 const defPaicodeName string = "50637ebc88e9c0f2ea9d240784b491c4fde8ebd177a95fbc2f087312111affef1898fea4c267ff1084db244de6c6860f4367b700659d44b7b47fabda27347c23"
+const defRegion string = "GamepaiHQ"
 
 var rpcCmd = &cobra.Command{
 	Use:   "rpc [command...]",
@@ -26,7 +27,8 @@ var rpcCmd = &cobra.Command{
 			return err
 		}		
 		
-		defClient.PrepareRpc(conn) 
+		defClient.PrepareRpc(conn)
+		defClient.SetRpcRegion(defRegion)
 		defClient.Rpc.Rpcbuilder.ChaincodeName = defPaicodeName
 		return nil
 	},
@@ -104,6 +106,23 @@ var queryUserCmd = &cobra.Command{
 	},
 }
 
+var queryNodeCmd = &cobra.Command{
+	Use:       "query node",
+	Short:     fmt.Sprintf("Query the status of access node"),
+	RunE: func(cmd *cobra.Command, args []string) error{
+		
+		ret, err := defClient.Rpc.QueryNode(args...)
+		if err != nil{
+			return err
+		}
+		
+		fmt.Println("---------------- clientnode status ---------------")
+		fmt.Println(string(ret))
+		fmt.Println("--------------------------------------------------")
+		return nil
+	},
+}
+
 var queryGlobalCmd = &cobra.Command{
 	Use:       "query",
 	Short:     fmt.Sprintf("Query the status of chaincode"),
@@ -130,4 +149,5 @@ func init(){
 	rpcCmd.AddCommand(userCmd)
 	rpcCmd.AddCommand(codenameCmd)
 	rpcCmd.AddCommand(queryGlobalCmd)
+	rpcCmd.AddCommand(queryNodeCmd)
 }

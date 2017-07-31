@@ -28,6 +28,7 @@ var UserRegPublicKey string = User_funcs + "_REGPUBLICKEY"
 var UserAuthChaincode string = User_funcs + "_AUTHCHAINCODE"
 
 var QueryUser string = Query_funcs + "_USER"
+var QueryNode string = Query_funcs + "_NODE"
 var QueryGlobal string = Query_funcs + "_GLOBAL"
 
 type AdminOrManageTx interface{
