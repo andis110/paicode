@@ -184,13 +184,7 @@ func (f *fundHandler) Handle(uid string, ud *persistpb.UserData, stub shim.Chain
 		return
 	}else if errx != nil{
 		logger.Warning("Could not check fund nounce:", errx, ",we just continue")
-	}
-	
-	defer func(){
-		if err == nil{
-			ncMgr.SavefundNounce()
-		}
-	}()	
+	}	
 	
 	//now get the target id
 	var data []byte
@@ -215,12 +209,16 @@ func (f *fundHandler) Handle(uid string, ud *persistpb.UserData, stub shim.Chain
 	ud.Pais -= int64(fdetail.Amount)
 	toUd.Pais += int64(fdetail.Amount)
 	
+	ud.LastNouncekey = ncMgr.nouncekey
+	toUd.LastNouncekey = ncMgr.nouncekey
+	
 	ud.LastActive = ncMgr.Tsnow
 	toUd.LastActive = ncMgr.Tsnow
 	
 	//all the user data will be written back
 	outud = map[string]*persistpb.UserData{uid: ud, fdetail.To: toUd}
 	
-	logger.Info("Fund transaction of ", fdetail.Amount, "pais from", uid, "to", fdetail.To)	
+	logger.Info("Fund transaction of ", fdetail.Amount, "pais from", uid, "to", fdetail.To)
+	ncMgr.SavefundNounce(stub, ud, toUd)	
 	return
 } 

@@ -8,6 +8,8 @@ import (
 	proto "github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	txutil "gamecenter.mobi/paicode/transactions"
+	pb 	   "gamecenter.mobi/paicode/protos"
+	
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
  
@@ -20,18 +22,22 @@ const (
 
 type NounceManager struct{
 	Tsnow *timestamp.Timestamp
-	nouncekey	string
+	nouncekey	[]byte
 	stub 		shim.ChaincodeStubInterface
 }
 
-func (_ *NounceManager) genfundNounce(from string, to string, nounce []byte) (string){
+func GenFuncNounceKeyStr(nouncekey []byte) string{
+	return FundNouncePrefix + base64.StdEncoding.EncodeToString(nouncekey)
+}
+
+func (m *NounceManager) genfundNounce(from string, to string, nounce []byte) {
 	idbyte := txutil.AddrHelper.DecodeUserid(from)
 	if idbyte == nil{
-		return ""
+		return
 	}
 	
 	shabyte := sha256.Sum256(append(idbyte, nounce...))
-	return FundNouncePrefix + base64.StdEncoding.EncodeToString(shabyte[:])
+	m.nouncekey = shabyte[:]
 }
 
 //so we get three types return: true and no error indicate we definitely get the exist nounce,
@@ -39,25 +45,26 @@ func (_ *NounceManager) genfundNounce(from string, to string, nounce []byte) (st
 //false and error indicate we could not know the nounce exist or not and it is on your risk to continue
 func (m *NounceManager) CheckfundNounce(stub shim.ChaincodeStubInterface, from string, nounce []byte) (bool, error){
 	
-	m.nouncekey = m.genfundNounce(from, "", nounce)
-	if len(m.nouncekey) == 0{
+	m.genfundNounce(from, "", nounce)
+	if m.nouncekey == nil{
 		return false, errors.New("Could not get func nounce key")
 	}
 	
-	logger.Debug("fund tx nounce:", m.nouncekey)
+	nouncekey := GenFuncNounceKeyStr(m.nouncekey)
+	logger.Debug("fund tx nounce:", nouncekey)
 	m.stub = stub
 	
-	data, err := stub.GetState(m.nouncekey)
+	data, err := stub.GetState(nouncekey)
 	if err != nil{
 		return false, err
 	}
 	
-	if data != nil{		
-		//nounce can be reused if it has finished for a very long time (nounce_reuse_interval_sec)
-		ts := &timestamp.Timestamp{}
-		err = proto.Unmarshal(data, ts)
+	if data != nil{	
+		//just check the data ...
+		nouncedata := &pb.NounceData{}
+		err = proto.Unmarshal(data, nouncedata)
 		if err == nil{
-			logger.Warning("May encounter a replay tx, original is in", ts)			
+			logger.Warning("May encounter a replay tx, original is in", nouncedata.NounceTime)			
 		}else{
 			logger.Error("Recorded nounce is invalid:", err)
 		}
@@ -69,14 +76,18 @@ func (m *NounceManager) CheckfundNounce(stub shim.ChaincodeStubInterface, from s
 	
 }
 
-func (m *NounceManager) SavefundNounce(){
+func (m *NounceManager) SavefundNounce(stub shim.ChaincodeStubInterface, from *pb.UserData, to *pb.UserData){
 	if len(m.nouncekey) == 0{
 		return
 	}
 	
-	data, err := proto.Marshal(m.Tsnow)
+	nouncedata := &pb.NounceData{Txid: stub.GetTxID(), NounceTime: m.Tsnow,
+		FromNouncekey: from.LastNouncekey, ToNouncekey: to.LastNouncekey}
+	data, err := proto.Marshal(nouncedata)
 	if err == nil{
-		m.stub.PutState(m.nouncekey, data)
+		m.stub.PutState(GenFuncNounceKeyStr(m.nouncekey), data)
+	}else{
+		logger.Error("Marshal nounce data fail!", err)
 	}
 	
 }

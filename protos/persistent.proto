@@ -11,6 +11,7 @@ message UserData {
 	PublicKey pk = 2; 
 	google.protobuf.Timestamp lastActive = 3;
 	string	  managedRegion = 5;
+	bytes     lastNouncekey = 6;
 	repeated  uint32 authcodes = 10; //chaincode which user has allowed to invoked the base transaction from
 }
 
@@ -31,6 +32,13 @@ message DeploySetting{
 	int64 totalPais = 10;
 	int64 unassignedPais = 11;
 	 
+}
+
+message NounceData{
+    string txid = 1;
+    google.protobuf.Timestamp nounceTime = 2;
+    bytes  fromNouncekey = 3;
+    bytes  toNouncekey = 4;
 }
 
 message RegChainCodeTable{
