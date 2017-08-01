@@ -3,6 +3,7 @@ package client
 import (
 	"fmt"
 	"errors"
+	"strings"
 	"strconv"
 	
 	"gamecenter.mobi/paicode/wallet"
@@ -21,6 +22,36 @@ type rpcManager struct{
 const(
 	fundNounceMaxLen int = 256
 )
+
+func MakeInitParam(debugmode bool, args ...string) (string, error){
+	
+	if len(args) < 2{
+		return "", errors.New("No enough arguments")
+	}
+	
+	total, err := strconv.Atoi(args[0])
+	if err != nil{
+		return "", err
+	}	
+	
+	initset := &pb.InitChaincode{&pb.DeploySetting{debugmode, int32(txutil.AddrHelper), int64(total), int64(total)}, nil}
+	
+	for _, assignstr := range args[1:]{
+		ret := strings.Split(assignstr, ":")
+		if len(ret) != 2{
+			return "", fmt.Errorf("Invalid assign str %s", assignstr)
+		}
+		
+		if amount, err := strconv.Atoi(ret[1]); err != nil{
+			return "", fmt.Errorf("Invalid assign amount: %s (in %s)", err.Error(), assignstr)
+		}else{
+			initset.PreassignedUser = append(initset.PreassignedUser, &pb.PreassignData{ret[0], int64(amount)})
+		}
+		
+	}
+	
+	return txutil.EncodeChaincodeTx(initset)
+}
 
 //funding: <to:addr> <amount> [message]
 func (m* rpcManager) Fund(args ...string) (string, error){

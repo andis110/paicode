@@ -3,6 +3,7 @@ package client
 import (
 	"fmt"
 	"errors"
+	"strings"
 	
 	"gamecenter.mobi/paicode/wallet"
 	txutil "gamecenter.mobi/paicode/transactions"
@@ -112,6 +113,18 @@ func (m* accountManager) ImportPrivkey(args ...string) (string, error){
 	if err != nil{
 		return "", err
 	}
+	
+	//check duplication
+	addr := txutil.AddrHelper.GetUserId(&k.K.PublicKey)
+	kmap, err := m.KeyMgr.ListAll()
+	if err != nil{
+		return "", err
+	}
+	for _, v := range kmap{
+		if strings.Compare(addr, txutil.AddrHelper.GetUserId(&v.K.PublicKey)) == 0{
+			return "", errors.New("Duplicate key")
+		}
+	} 
 	
 	m.KeyMgr.AddPrivKey(remark, k)
 	

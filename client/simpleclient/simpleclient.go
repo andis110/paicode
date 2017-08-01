@@ -17,6 +17,19 @@ var mainCmd = &cobra.Command{
 	Use: ">",
 }
 
+var deployCmd = &cobra.Command{
+	Use: "deploy <totalpai> [assignaddr:amount]",	
+	Short:  fmt.Sprintf("print the deploy string"),
+	Run: func(cmd *cobra.Command, args []string){
+		ret, err := clicore.MakeInitParam(deployByDebug, args...)
+		if err != nil {
+			fmt.Println("Failed:", err)
+		}else{
+			fmt.Println(ret)
+		}
+	},
+}
+
 var exitCmd = &cobra.Command{
 	Use: "exit",
 	Run: func(cmd *cobra.Command, args []string){
@@ -26,6 +39,16 @@ var exitCmd = &cobra.Command{
 
 var defClient *clicore.ClientCore 
 var shouldExit bool = false
+var deployByDebug bool = false
+
+func flagCmds(){
+	deployCmd.ResetFlags()
+	
+	//only this flagset can be reuse (e.g localflag will be added to other command)
+	deployflags := deployCmd.Flags()
+	deployflags.BoolVar(&deployByDebug, "debug", false, "Specific Debugmode")
+	
+}
 
 func main() {
 	
@@ -50,8 +73,10 @@ func main() {
 	fmt.Print("Starting .... ")
 	mainCmd.AddCommand(rpcCmd)
 	mainCmd.AddCommand(accountCmd)
+	mainCmd.AddCommand(deployCmd)
 	mainCmd.AddCommand(exitCmd)
 	
+	flagCmds()
 	mainCmd.SetArgs([]string{"help"})
 	err = mainCmd.Execute()
 	if err != nil{
@@ -79,6 +104,7 @@ func main() {
 			if err != nil{
 				fmt.Println("Input parse error:", err)		
 			}else{
+				flagCmds()
 				mainCmd.SetArgs(args)
 				err = mainCmd.Execute()
 				if err != nil{

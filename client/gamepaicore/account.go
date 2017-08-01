@@ -76,8 +76,24 @@ func (s *AccountREST) NewAcc(rw web.ResponseWriter, req *web.Request){
 
 func (s *AccountREST) DumpAcc(rw web.ResponseWriter, req *web.Request){
 	
-	//TODO
+	id := req.PathParams["id"]
+	if id == "" {
+		rw.WriteHeader(http.StatusBadRequest)
+		rw.Write([]byte("{\"status\":\"Account id not found\"}"))//just write a raw json
+		return
+	}	
+	
+	encoder := json.NewEncoder(rw)
+	ret, err := defClient.Accounts.DumpPrivkey(id)
+
+	if err != nil{
+		rw.WriteHeader(http.StatusNotFound)
+		encoder.Encode(restData{"Account not exist", err.Error()})
+		return
+	}	
+	
 	rw.WriteHeader(http.StatusOK)
-	rw.Write([]byte("{\"status\":\"ok\"}"))	
+	encoder.Encode(restData{"ok", ret})
+		
 }
 

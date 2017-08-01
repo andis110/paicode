@@ -74,7 +74,8 @@ func (t *PaiChaincode) Invoke(stub shim.ChaincodeStubInterface, function string,
 	
 	//check priviledge
 	if !sec.Helper.VerifyPrivilege(rolePriv, expectPriv){ 
-		sec.Helper.ActiveAudit(stub, fmt.Sprintf("Call function <%s> without require priviledge", function))
+		sec.Helper.ActiveAudit(stub, fmt.Sprintf("Call function <%s> without require priviledge: <%s vs %s>", 
+				function, expectPriv, rolePriv))
 		return nil, errors.New("No priviledge")
 	}	
 	

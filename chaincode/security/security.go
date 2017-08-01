@@ -53,7 +53,7 @@ func (sec *SecurityPolicy) GetPrivilege(stub shim.ChaincodeStubInterface) (strin
 		
 	attrHandler, err := attr.NewAttributesHandlerImpl(stub)
 	if err != nil{
-		logger.Info("Create Attr handler fail", err)
+		logger.Error("Create Attr handler fail", err)
 		
 		if sec.dbgMode{
 			return debugPrivilege, debugRegion
@@ -65,7 +65,7 @@ func (sec *SecurityPolicy) GetPrivilege(stub shim.ChaincodeStubInterface) (strin
 	var privstr, regionstr string
 	privilege, err := attrHandler.GetValue(Privilege_Attr)
 	if err != nil{
-		logger.Info("get privilege attr fail", err)
+		logger.Error("get privilege attr fail", err)
 		privstr = noPrivilege
 	}else{
 		privstr = string(privilege)
@@ -73,7 +73,7 @@ func (sec *SecurityPolicy) GetPrivilege(stub shim.ChaincodeStubInterface) (strin
 	
 	region, err := attrHandler.GetValue(Region_Attr)
 	if err != nil{
-		logger.Info("get region attr fail", err)
+		logger.Error("get region attr fail", err)
 		regionstr = noRegion
 	}else{
 		regionstr = string(region)
@@ -92,8 +92,12 @@ func (sec *SecurityPolicy) VerifyPrivilege(certpriv string, expect string) bool{
 		return true
 	}
 	
-	return strings.Compare(certpriv, expect) != 0
+	if strings.Compare(certpriv, expect) != 0{
+		logger.Error("Comprivilege fail: ", certpriv, expect)
+		return false
+	}
 	
+	return true
 }
 
 func (sec *SecurityPolicy) VerifyRegion(region string, expect string) bool{
@@ -102,6 +106,6 @@ func (sec *SecurityPolicy) VerifyRegion(region string, expect string) bool{
 		return true
 	}	
 	
-	return strings.Compare(region, expect) != 0
+	return strings.Compare(region, expect) == 0
 	
 }
