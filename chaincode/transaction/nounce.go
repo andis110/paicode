@@ -30,22 +30,29 @@ func GenFuncNounceKeyStr(nouncekey []byte) string{
 	return FundNouncePrefix + base64.StdEncoding.EncodeToString(nouncekey)
 }
 
-func (m *NounceManager) genfundNounce(from string, to string, nounce []byte) {
-	idbyte := txutil.AddrHelper.DecodeUserid(from)
-	if idbyte == nil{
-		return
+func GenfundNounce(from string, to string, nounce []byte) []byte {
+	idfrombyte := txutil.AddrHelper.DecodeUserid(from)
+	if idfrombyte == nil{
+		return nil
 	}
 	
-	shabyte := sha256.Sum256(append(idbyte, nounce...))
-	m.nouncekey = shabyte[:]
+	idtobyte := txutil.AddrHelper.DecodeUserid(to)
+	if idtobyte == nil{
+		return nil
+	}	
+	
+	idtotal := append(idfrombyte, idtobyte...)
+	
+	shabyte := sha256.Sum256(append(idtotal, nounce...))
+	return shabyte[:]
 }
 
 //so we get three types return: true and no error indicate we definitely get the exist nounce,
 //false and no error indicate we definitely not get the exist nounce or it has been expired,
 //false and error indicate we could not know the nounce exist or not and it is on your risk to continue
-func (m *NounceManager) CheckfundNounce(stub shim.ChaincodeStubInterface, from string, nounce []byte) (bool, error){
+func (m *NounceManager) CheckfundNounce(stub shim.ChaincodeStubInterface, from string, to string, nounce []byte) (bool, error){
 	
-	m.genfundNounce(from, "", nounce)
+	m.nouncekey = GenfundNounce(from, to, nounce)
 	if m.nouncekey == nil{
 		return false, errors.New("Could not get func nounce key")
 	}
@@ -82,7 +89,7 @@ func (m *NounceManager) SavefundNounce(stub shim.ChaincodeStubInterface, from *p
 	}
 	
 	nouncedata := &pb.NounceData{Txid: stub.GetTxID(), NounceTime: m.Tsnow,
-		FromNouncekey: from.LastNouncekey, ToNouncekey: to.LastNouncekey}
+		FromLast: from.LastFund, ToLast: to.LastFund}
 	data, err := proto.Marshal(nouncedata)
 	if err == nil{
 		m.stub.PutState(GenFuncNounceKeyStr(m.nouncekey), data)

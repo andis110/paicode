@@ -12,6 +12,7 @@ type GamepaiREST struct{
 
 type AccountREST struct{
 	*GamepaiREST
+	id string
 	shouldPersist bool
 }
 
@@ -87,6 +88,7 @@ func buildRouter() *web.Router {
 	accRouter.Middleware((*AccountREST).PersistAccount)
 	accRouter.Post("/", (*AccountREST).NewAcc)
 	accRouter.Get("/", (*AccountREST).ListAcc)
+	accRouter.Delete("/:id", (*AccountREST).DeleteAcc)
 	accRouter.Get("/:id", (*AccountREST).QueryAcc)	
 	accRouter.Get("/dump/:id", (*AccountREST).DumpAcc)
 	

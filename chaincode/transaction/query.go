@@ -3,7 +3,7 @@ package transaction
 import (
 	"errors"
 	"encoding/json"
-	_ "strings"
+	"strings"
 	
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	proto "github.com/golang/protobuf/proto"
@@ -24,11 +24,15 @@ type queryNodeHandler struct{
 	
 }
 
+type queryRecordHandler struct{
+	
+}
 
 func init(){
 	QueryMap[QueryUser] = &queryUserHandler{}
 	QueryMap[QueryGlobal] = &queryGlobalHandler{}
 	QueryMap[QueryNode] = &queryNodeHandler{}
+	QueryMap[QueryRec] = &queryRecordHandler{}
 }
 
 func (_ *queryUserHandler) Handle(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
@@ -89,6 +93,35 @@ func (_ *queryGlobalHandler) Handle(stub shim.ChaincodeStubInterface, args []str
 	return json.Marshal(setting)
 } 
 
+func (_ *queryRecordHandler) Handle(stub shim.ChaincodeStubInterface, args []string) ([]byte, error){
+	
+	if len(args) != 1{
+		return nil, errors.New("Invalid query argument")
+	}
+	
+	if strings.Compare(FundNouncePrefix, args[0][:3]) != 0{
+		return nil, errors.New("Not a fundtx record key")
+	}
+	
+	rawset, err := stub.GetState(args[0])
+	if err != nil{
+		return nil, err
+	}
+	
+	if rawset == nil{
+		return nil, errors.New("fundtx record not found")
+	}
+	
+	record := &persistpb.NounceData{}
+	err = proto.Unmarshal(rawset, record)
+	
+	if err != nil{
+		return nil, err
+	}
+	
+	return json.Marshal(record)	
+}
+
 type nodeInfo struct{
 	Region string `json:"region"`
 	Priv string `json:"privilege"`
@@ -99,3 +132,4 @@ func (_ *queryNodeHandler) Handle(stub shim.ChaincodeStubInterface, args []strin
 	
 	return json.Marshal(nodeInfo{Priv: rolePriv, Region: region})
 }
+

@@ -66,7 +66,7 @@ var mainCmd = &cobra.Command{
 		}
 		
 		defClient.Accounts.KeyMgr.Load()
-		defer defClient.Accounts.KeyMgr.Persist()			
+		//defer defClient.Accounts.KeyMgr.Persist()			
 		
 		// Initialize the REST service object
 		restLogger.Infof("Initializing the REST service on %s", svraddr)

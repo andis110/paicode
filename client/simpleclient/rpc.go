@@ -140,6 +140,22 @@ var queryGlobalCmd = &cobra.Command{
 	},
 }
 
+var queryRecordCmd = &cobra.Command{
+	Use:       "queryfund <from:to> <nounce>",
+	Short:     fmt.Sprintf("Query the status of chaincode"),
+	RunE: func(cmd *cobra.Command, args []string) error{
+		
+		ret, err := defClient.Rpc.QueryRecord(args...)
+		if err != nil{
+			return err
+		}
+		
+		fmt.Println("---------------- fundtx record  ------------------")
+		fmt.Println(string(ret))
+		fmt.Println("--------------------------------------------------")
+		return nil
+	},
+}
 
 func init(){
 	userCmd.AddCommand(registerCmd)
@@ -150,4 +166,5 @@ func init(){
 	rpcCmd.AddCommand(codenameCmd)
 	rpcCmd.AddCommand(queryGlobalCmd)
 	rpcCmd.AddCommand(queryNodeCmd)
+	rpcCmd.AddCommand(queryRecordCmd)
 }

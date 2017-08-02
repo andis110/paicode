@@ -179,7 +179,7 @@ func (f *fundHandler) Handle(uid string, ud *persistpb.UserData, stub shim.Chain
 	
 	ncMgr := &NounceManager{Tsnow: acquireTsNow(stub)}
 	
-	if b, errx := ncMgr.CheckfundNounce(stub, uid, fdetail.Nounce); b{
+	if b, errx := ncMgr.CheckfundNounce(stub, uid, fdetail.To, fdetail.Nounce); b{
 		err = errors.New("A fund tx has been recorded recently")
 		return
 	}else if errx != nil{
@@ -193,7 +193,7 @@ func (f *fundHandler) Handle(uid string, ud *persistpb.UserData, stub shim.Chain
 		return
 	}
 	
-	toUd := &pb.UserData{}
+	toUd := &pb.UserData{LastFund: &pb.FuncRecord{nil, false}}
 	if data != nil{		
 		err = proto.Unmarshal(data, toUd)
 		if err != nil{
@@ -204,21 +204,24 @@ func (f *fundHandler) Handle(uid string, ud *persistpb.UserData, stub shim.Chain
 		//index must be added, for safety we set the pai number
 		toUd.Pais = 0
 	}
+
+	//we must save nounce first
+	ncMgr.SavefundNounce(stub, ud, toUd)	
 	
 	//finally, update for transaction
 	ud.Pais -= int64(fdetail.Amount)
 	toUd.Pais += int64(fdetail.Amount)
-	
-	ud.LastNouncekey = ncMgr.nouncekey
-	toUd.LastNouncekey = ncMgr.nouncekey
-	
+
 	ud.LastActive = ncMgr.Tsnow
 	toUd.LastActive = ncMgr.Tsnow
+	
+	ud.LastFund = &pb.FuncRecord{ncMgr.nouncekey, true}
+	toUd.LastFund = &pb.FuncRecord{ncMgr.nouncekey, false}	
 	
 	//all the user data will be written back
 	outud = map[string]*persistpb.UserData{uid: ud, fdetail.To: toUd}
 	
 	logger.Info("Fund transaction of ", fdetail.Amount, "pais from", uid, "to", fdetail.To)
-	ncMgr.SavefundNounce(stub, ud, toUd)	
+		
 	return
 } 

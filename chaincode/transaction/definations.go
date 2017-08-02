@@ -30,6 +30,7 @@ var UserAuthChaincode string = User_funcs + "_AUTHCHAINCODE"
 var QueryUser string = Query_funcs + "_USER"
 var QueryNode string = Query_funcs + "_NODE"
 var QueryGlobal string = Query_funcs + "_GLOBAL"
+var QueryRec string = Query_funcs + "_RECORD"
 
 type AdminOrManageTx interface{
 	Handle(*persistpb.DeploySetting, shim.ChaincodeStubInterface, []string) (*persistpb.DeploySetting, map[string]*persistpb.UserData, error) 

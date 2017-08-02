@@ -51,6 +51,15 @@ func (m* accountManager) DumpPrivkey(args ...string) (string, error){
 	return k.DumpPrivkey()
 }
 
+//dump privatekey from [remark]
+func (m* accountManager) DelPrivkey(args ...string)  error{
+	if len(args) != 1{
+		return errors.New("Invalid arguments")
+	}
+	
+	return m.KeyMgr.RemovePrivKey(args[0])
+}
+
 //get address from [remark]
 func (m* accountManager) GetAddress(args ...string) (string, error){
 	if len(args) != 1{

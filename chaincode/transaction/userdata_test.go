@@ -31,9 +31,10 @@ func TestUserDataTx(t *testing.T){
 	}	
 	
 	h := &regPublicKeyHandler{}
+	dummyRec := &pb.FuncRecord{nil, false}
 	
 	stub.MockTransactionStart("1")
-	out, err := h.Handle(uid, &pb.UserData{0, nil, nil, "Hello region", nil}, stub, args)
+	out, err := h.Handle(uid, &pb.UserData{0, nil, nil, "Hello region", dummyRec, nil}, stub, args)
 	if err != nil{
 		t.Fatal(err)
 	}
@@ -52,7 +53,7 @@ func TestUserDataTx(t *testing.T){
 	}
 	
 	stub.MockTransactionStart("1")
-	out, err = h.Handle(uid, &pb.UserData{0, inpk, out[uid].LastActive, "New region", nil}, stub, args)
+	out, err = h.Handle(uid, &pb.UserData{0, inpk, out[uid].LastActive, "New region", dummyRec, nil}, stub, args)
 	if err != nil{
 		t.Fatal(err)
 	}	
@@ -68,7 +69,7 @@ func TestUserDataTx(t *testing.T){
 	}
 	
 	stub.MockTransactionStart("1")
-	out, err = h.Handle(txutil.AddrHelper.GetUserId(&yaprivk.K.PublicKey), &pb.UserData{0, nil, nil, "", nil}, stub, args)
+	out, err = h.Handle(txutil.AddrHelper.GetUserId(&yaprivk.K.PublicKey), &pb.UserData{0, nil, nil, "", dummyRec, nil}, stub, args)
 	if err == nil{
 		t.Fatal("Not recognize error")
 	}

@@ -8,5 +8,6 @@ type KeyManager interface {
 	LoadPrivKey(remark string) (*Privkey, error)
 	ListAll() (map[string]*Privkey, error)
 	Load() error
+	RemovePrivKey(remark string) error
 	Persist() error
 }

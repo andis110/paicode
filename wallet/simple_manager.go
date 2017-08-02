@@ -40,6 +40,17 @@ func (m *simpleManager) LoadPrivKey(remark string) (*Privkey, error){
 	return k, nil
 }
 
+func (m *simpleManager) RemovePrivKey(remark string) error{
+
+	_, ok := m.keyData[remark]
+	if !ok {
+		return errors.New("No this key")
+	}	
+	
+	delete(m.keyData, remark)
+	return nil
+}
+
 func (m *simpleManager) ListAll() (map[string]*Privkey, error){
 	
 	m.lock.RLock()

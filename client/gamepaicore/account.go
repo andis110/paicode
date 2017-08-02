@@ -43,12 +43,34 @@ func (s *AccountREST) ListAcc(rw web.ResponseWriter, req *web.Request){
 	encoder.Encode(restData{"ok", retmap})
 }
 
+func (s *AccountREST) DeleteAcc(rw web.ResponseWriter, req *web.Request){
+	id := req.PathParams["id"]
+	if id == "" {
+		rw.WriteHeader(http.StatusBadRequest)
+		rw.Write([]byte("{\"status\":\"Account id not found\"}"))//just write a raw json
+		return
+	}
+	
+	encoder := json.NewEncoder(rw)
+	err := defClient.Accounts.DelPrivkey(id)
+	if err != nil{
+		rw.WriteHeader(http.StatusNotFound)
+		encoder.Encode(restData{"Account not exist", nil})
+		return
+	}
+	
+	rw.WriteHeader(http.StatusOK)
+	encoder.Encode(restData{"ok", nil})		
+}
+
 func (s *AccountREST) NewAcc(rw web.ResponseWriter, req *web.Request){
 	
 	err := req.ParseForm()
+	encoder := json.NewEncoder(rw)
+	
 	if err != nil || len(req.Form) == 0{
 		rw.WriteHeader(http.StatusNotAcceptable)
-		rw.Write([]byte("{\"status\":\"Wrong form or not expected content (application/x-www-urlencoded)\"}"))
+		encoder.Encode(restData{"Wrong form or not expected content (application/x-www-urlencoded)", err.Error()})
 		return		
 	}
 		
@@ -67,6 +89,12 @@ func (s *AccountREST) NewAcc(rw web.ResponseWriter, req *web.Request){
 	}else{
 		//generate
 		_, err = defClient.Accounts.GenPrivkey(accountid[0])
+	}
+	
+	if err != nil{
+		rw.WriteHeader(http.StatusBadRequest)
+		encoder.Encode(restData{"Import fail", err.Error()})
+		return
 	}
 	
 	rw.WriteHeader(http.StatusOK)

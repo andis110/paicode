@@ -44,6 +44,8 @@ func (s *RpcQueryREST) QueryUser(rw web.ResponseWriter, req *web.Request){
 	encoder.Encode(data)
 }
 
+
+
 func (s *RpcQueryREST) QueryChain(rw web.ResponseWriter, req *web.Request){
 	encoder := json.NewEncoder(rw)
 	ret, err := defClient.Rpc.QueryGlobal()
