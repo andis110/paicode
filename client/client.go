@@ -30,7 +30,7 @@ func RpcCoreFromClient(rpc *rpcManager) *RpcCore{
 	c.Rpc.Rpcbuilder.Conn = rpc.Rpcbuilder.Conn
 	c.Rpc.Rpcbuilder.ChaincodeName = rpc.Rpcbuilder.ChaincodeName
 	c.Rpc.PrivKey = rpc.PrivKey
-	
+	c.Rpc.Rpcbuilder.Security = rpc.Rpcbuilder.Security
 	return c
 }
 
