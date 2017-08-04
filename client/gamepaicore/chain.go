@@ -52,6 +52,7 @@ func (s *RpcQueryREST) QueryChain(rw web.ResponseWriter, req *web.Request){
 	if err != nil{
 		rw.WriteHeader(http.StatusServiceUnavailable)
 		encoder.Encode(restData{"Query fail", err.Error()})
+		return
 	}
 
 	data, err := reconstructRpcRet(ret)
