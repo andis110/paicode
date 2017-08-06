@@ -75,11 +75,11 @@ func (s *RpcREST) LoadRPC(rw web.ResponseWriter, req *web.Request, next web.Next
 	
 	s.workCore = clicore.RpcCoreFromClient(&defClient.Rpc)
 	
-	err = s.workCore.Rpc.Rpcbuilder.VerifyConn()
-	if err != nil{
-		s.RpcFail(rw, req, err.Error())
-		return
-	}		
+//	err = s.workCore.Rpc.Rpcbuilder.VerifyConn()
+//	if err != nil{
+//		s.RpcFail(rw, req, err.Error())
+//		return
+//	}		
 	
 	next(rw, req)
 }

@@ -9,7 +9,9 @@ import (
 	
 	fabricpeer_comm "github.com/hyperledger/fabric/peer/common"
 	fabric_pb "github.com/hyperledger/fabric/protos"
+	"github.com/hyperledger/fabric/peer/console"
 	"github.com/hyperledger/fabric/peerex"
+
 )
 
 var default_conn peerex.ClientConn
@@ -38,7 +40,7 @@ func main() {
 	
 	defer default_conn.C.Close()
 	
-	cmd := peerex.GetConsolePeer(&config)
+	cmd := console.GetConsolePeer()
 	if cmd == nil{
 		fmt.Println("Can't not make command handler")
 		os.Exit(1)		
