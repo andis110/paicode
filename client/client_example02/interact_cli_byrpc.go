@@ -14,7 +14,7 @@ var logger = peerex.InitLogger("main")
 func main() {
 	
 	config := peerex.GlobalConfig{}
-	err := config.InitGlobal()
+	err := config.InitGlobal(true)
 	
 	if err != nil{
 		panic(err)		

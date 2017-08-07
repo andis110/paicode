@@ -7,7 +7,7 @@ import (
 	_ "strconv"
 	_ "encoding/hex"
 	
-	"github.com/op/go-logging"
+	"github.com/hyperledger/fabric/peerex"	
 	"github.com/hyperledger/fabric/core/chaincode/shim"	
 	
 	persistpb "gamecenter.mobi/paicode/protos"
@@ -38,7 +38,7 @@ var privilege_Def = map[string]string{
 	tx.Manage_funcs: sec.ManagerPrivilege,
 	tx.User_funcs: sec.DelegatePrivilege}
 
-var logger = logging.MustGetLogger("chaincode")
+var logger = peerex.InitLogger("chaincode")
 
 func (s *paiStatus) init(set *persistpb.DeploySetting){
 	s.totalPai = set.TotalPais

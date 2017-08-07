@@ -26,7 +26,7 @@ func genDevopsClientKeepAlive() (fabric_pb.DevopsClient, error) {
 func main() {
 	
 	config := peerex.GlobalConfig{}
-	err := config.InitGlobal()
+	err := config.InitGlobal(true)
 	
 	if err != nil{
 		panic(err)		

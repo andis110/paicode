@@ -71,15 +71,15 @@ func (s *RpcREST) LoadRPC(rw web.ResponseWriter, req *web.Request, next web.Next
 		panic(fmt.Sprintf("No corresponding privkey for %s", kid))
 	}	
 	
-	s.workCore.Rpc.PrivKey = key
-	
 	s.workCore = clicore.RpcCoreFromClient(&defClient.Rpc)
 	
-//	err = s.workCore.Rpc.Rpcbuilder.VerifyConn()
-//	if err != nil{
-//		s.RpcFail(rw, req, err.Error())
-//		return
-//	}		
+	s.workCore.Rpc.PrivKey = key
+	
+	err = s.workCore.Rpc.Rpcbuilder.VerifyConn()
+	if err != nil{
+		s.RpcFail(rw, req, err.Error())
+		return
+	}		
 	
 	next(rw, req)
 }

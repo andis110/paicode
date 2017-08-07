@@ -22,7 +22,8 @@ var mainCmd = &cobra.Command{
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 
 		config := &peerex.GlobalConfig{}
-		err := config.InitGlobal()
+		//TODO: apply log to file
+		err := config.InitGlobal(true)
 		
 		if err != nil{
 			return err
@@ -93,12 +94,13 @@ var exitCmd = &cobra.Command{
 var restLogger = peerex.InitLogger("gamepaiREST")
 var debugmode bool = false
 var offlinemode bool = false
-
+var logtostd bool = false
 
 func main() {
 	
 	mainCmd.Flags().BoolVar(&debugmode, "debug", false, "run http server with debug output")
 	mainCmd.Flags().BoolVar(&offlinemode, "offline", false, "not communicate with other peers")
+	mainCmd.Flags().BoolVar(&logtostd, "logtostd", false, "put log to std out")
 	
 	mainCmd.AddCommand(exitCmd)	
 
