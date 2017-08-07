@@ -16,13 +16,14 @@ type AccountREST struct{
 	shouldPersist bool
 }
 
-type RpcREST struct{
+type RpcQueryREST struct{
 	*GamepaiREST
 	workCore *clicore.RpcCore 
 }
 
-type RpcQueryREST struct{
+type RpcREST struct{
 	*GamepaiREST
+	RpcQueryREST
 }
 
 type restData struct{
@@ -54,13 +55,26 @@ func (s *AccountREST) PersistAccount(rw web.ResponseWriter, req *web.Request, ne
 	} 
 }
 
-func (s *RpcREST) LoadRPC(rw web.ResponseWriter, req *web.Request, next web.NextMiddlewareFunc) {
+func (s *RpcQueryREST) LoadRPC(rw web.ResponseWriter, req *web.Request, next web.NextMiddlewareFunc) {
+	
+	s.workCore = clicore.RpcCoreFromClient(&defClient.Rpc)
+	
+	err := s.workCore.Rpc.Rpcbuilder.VerifyConn()
+	if err != nil{
+		s.RpcFail(rw, req, err.Error())
+		return
+	}		
+	
+	next(rw, req)
+}
+
+func (s *RpcREST) SetRPCKey(rw web.ResponseWriter, req *web.Request, next web.NextMiddlewareFunc) {
 
 	err := req.ParseForm()
 	if err != nil{
 		panic(err)
 	}
-	
+
 	kid := req.Form.Get("id")
 	if kid == "" {
 		panic("Must specific id")
@@ -69,18 +83,9 @@ func (s *RpcREST) LoadRPC(rw web.ResponseWriter, req *web.Request, next web.Next
 	key, err := defClient.Accounts.KeyMgr.LoadPrivKey(kid)
 	if err != nil{
 		panic(fmt.Sprintf("No corresponding privkey for %s", kid))
-	}	
-	
-	s.workCore = clicore.RpcCoreFromClient(&defClient.Rpc)
-	
-	s.workCore.Rpc.PrivKey = key
-	
-	err = s.workCore.Rpc.Rpcbuilder.VerifyConn()
-	if err != nil{
-		s.RpcFail(rw, req, err.Error())
-		return
 	}		
 	
+	s.workCore.Rpc.PrivKey = key
 	next(rw, req)
 }
 
@@ -100,11 +105,13 @@ func buildRouter() *web.Router {
 	accRouter.Get("/dump/:id", (*AccountREST).DumpAcc)
 	
 	rpcRouter := router.Subrouter(RpcREST{}, "/rpc")
-	rpcRouter.Middleware((*RpcREST).LoadRPC)	
+	rpcRouter.Middleware((*RpcREST).LoadRPC)
+	rpcRouter.Middleware((*RpcREST).SetRPCKey)
 	rpcRouter.Post("/registar", (*RpcREST).Registar)
 	rpcRouter.Post("/fund", (*RpcREST).Fund)
 
 	chainRouter := router.Subrouter(RpcQueryREST{}, "/chain")
+	chainRouter.Middleware((*RpcQueryREST).LoadRPC)
 	chainRouter.Get("/:addr", (*RpcQueryREST).QueryUser) 
 	chainRouter.Get("/", (*RpcQueryREST).QueryChain)
 

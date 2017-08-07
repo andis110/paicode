@@ -7,12 +7,6 @@ import (
 	_ "gamecenter.mobi/paicode/client"
 )
 
-func (s *RpcREST) RpcFail(rw web.ResponseWriter, req *web.Request, reason string){
-	encoder := json.NewEncoder(rw)	
-	rw.WriteHeader(http.StatusServiceUnavailable)
-	encoder.Encode(restData{"network broken", reason})		
-}
-
 func (s *RpcREST) Registar(rw web.ResponseWriter, req *web.Request){
 	txid, err := s.workCore.Rpc.Registry()
 

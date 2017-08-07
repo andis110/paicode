@@ -21,6 +21,12 @@ func reconstructRpcRet(jsonstr []byte) (*restData, error){
 	
 }
 
+func (s *RpcQueryREST) RpcFail(rw web.ResponseWriter, req *web.Request, reason string){
+	encoder := json.NewEncoder(rw)	
+	rw.WriteHeader(http.StatusServiceUnavailable)
+	encoder.Encode(restData{"network broken", reason})		
+}
+
 func (s *RpcQueryREST) QueryUser(rw web.ResponseWriter, req *web.Request){
 	address := req.PathParams["addr"]
 	if address == "" {
@@ -28,7 +34,7 @@ func (s *RpcQueryREST) QueryUser(rw web.ResponseWriter, req *web.Request){
 	}
 	
 	encoder := json.NewEncoder(rw)
-	ret, err := defClient.Rpc.QueryUser(address)
+	ret, err := s.workCore.Rpc.QueryUser(address)
 	if err != nil{
 		rw.WriteHeader(http.StatusNotFound)
 		encoder.Encode(restData{"Query fail", err.Error()})
@@ -48,7 +54,7 @@ func (s *RpcQueryREST) QueryUser(rw web.ResponseWriter, req *web.Request){
 
 func (s *RpcQueryREST) QueryChain(rw web.ResponseWriter, req *web.Request){
 	encoder := json.NewEncoder(rw)
-	ret, err := defClient.Rpc.QueryGlobal()
+	ret, err := s.workCore.Rpc.QueryGlobal()
 	if err != nil{
 		rw.WriteHeader(http.StatusServiceUnavailable)
 		encoder.Encode(restData{"Query fail", err.Error()})
