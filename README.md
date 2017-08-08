@@ -22,3 +22,15 @@ You need go 1.7. To install the client (the so-called "thin wallet" for a crypto
 ```
 go get -insecure gamecenter.mobi/paicode/client/gamepaicore
 ```
+
+## Configuration and running 配置和运行
+
+Configuration file is needed to run the client (gamepaicore). It should be core.windows.yaml under windows or core.yaml for other platforms, and be put under the working directory of client (gamepaicore) process
+
+TLS is forced to access the gamepai services. CA certification for TLS is in misc/ca.crt and must be placed as specified in the peer.tls.rootcert field of the configuration file
+
+客户端（gamepaicore）运行时需要在进程的工作目录下包含配置文件，对windows平台，配置文件是core.windows.yaml，其它平台是core.yaml。配置文件的模板可在misc目录中找到。
+
+客户端访问当前已运行的游派节点要求使用TLS连接，要求将服务端的根证书（misc/ca.crt）放置到配置文件中的指定位置（peer.tls.rootcert）
+
+
