@@ -1,4 +1,4 @@
-package main // import "gamecenter.mobi/paicode/client/gamepaicore"
+package main // import "gamecenter.mobi/paicode/client/simpleclient"
 
 import (
 	"os"
