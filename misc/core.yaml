@@ -14,5 +14,5 @@ peer:
     tls:
         serviceenabled: true
         rootcert:
-            file: ''/var/gamepai/ca.crt'
+            file: '/var/gamepai/ca.crt'
         serverhostoverride: 

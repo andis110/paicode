@@ -1,4 +1,4 @@
-package main 
+package main // import "gamecenter.mobi/paicode/client/gamepaicore"
 
 import (
 	"os"
@@ -17,7 +17,7 @@ const defRegion string = "gamepai01"
 var defClient *clicore.ClientCore 
 
 var mainCmd = &cobra.Command{
-	Use: "gamepai",
+	Use: "gamepai [listeningaddr]",
 	
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 
@@ -59,21 +59,18 @@ var mainCmd = &cobra.Command{
 	
 	Run: func(cmd *cobra.Command, args []string){
 		
-		var svraddr string
-		if len(args) > 1{
-			svraddr = args[0]
-		}else{
-			svraddr = "localhost:7280"
+		if listenaddr == ""{
+			listenaddr = "localhost:7280"
 		}
 		
 		defClient.Accounts.KeyMgr.Load()
 		//defer defClient.Accounts.KeyMgr.Persist()			
 		
 		// Initialize the REST service object
-		restLogger.Infof("Initializing the REST service on %s", svraddr)
+		restLogger.Infof("Initializing the REST service on %s", listenaddr)
 	
 		router := buildRouter()
-		err := http.ListenAndServe(svraddr, router)
+		err := http.ListenAndServe(listenaddr, router)
 		if err != nil {
 			restLogger.Errorf("ListenAndServe: %s", err)
 		}
@@ -95,12 +92,14 @@ var restLogger = peerex.InitLogger("gamepaiREST")
 var debugmode bool = false
 var offlinemode bool = false
 var logtostd bool = false
+var listenaddr string = ""
 
 func main() {
 	
 	mainCmd.Flags().BoolVar(&debugmode, "debug", false, "run http server with debug output")
 	mainCmd.Flags().BoolVar(&offlinemode, "offline", false, "not communicate with other peers")
 	mainCmd.Flags().BoolVar(&logtostd, "logtostd", false, "put log to std out")
+	mainCmd.Flags().StringVar(&listenaddr, "listen", "", "set listening addr")
 	
 	mainCmd.AddCommand(exitCmd)	
 

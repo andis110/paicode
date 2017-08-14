@@ -1,4 +1,4 @@
-package transaction
+package transaction 
 
 import (
 	"github.com/op/go-logging"
