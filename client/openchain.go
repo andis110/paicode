@@ -35,11 +35,6 @@ func (_* blockExplorer) DecodePayload(args ...string) (*fundTxSimple, error){
 		return nil, fmt.Errorf("Decode payload fail", err.Error())
 	}
 	
-	if invoke.ChaincodeSpec == nil || invoke.ChaincodeSpec.CtorMsg == nil ||
-	 invoke.ChaincodeSpec.CtorMsg.Args == nil || len(invoke.ChaincodeSpec.CtorMsg.Args) == 0{
-		return nil, fmt.Errorf("Uninitialized invoke tx")
-	}
-	
 	fund := string(invoke.ChaincodeSpec.CtorMsg.Args[0])
 	
 	if strings.Compare(fund, tx.UserFund) != 0{
