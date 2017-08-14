@@ -9,6 +9,7 @@ import (
 type ClientCore struct{
 	Accounts accountManager
 	Rpc		 rpcManager
+	Block    blockExplorer
 }
 
 type RpcCore struct{

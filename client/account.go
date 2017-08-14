@@ -13,6 +13,7 @@ type accountManager struct{
 	KeyMgr wallet.KeyManager
 }
 
+
 //generate privatekey: <remark>
 func (m* accountManager) GenPrivkey(args ...string) (string, error){
 	if len(args) > 1{

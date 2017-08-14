@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"github.com/gocraft/web"
 	"encoding/json"
+	tx "gamecenter.mobi/paicode/transactions"
 	_ "gamecenter.mobi/paicode/client"
 )
 
@@ -125,3 +126,18 @@ func (s *AccountREST) DumpAcc(rw web.ResponseWriter, req *web.Request){
 		
 }
 
+func (s *AccountREST) VerifyAddr(rw web.ResponseWriter, req *web.Request){
+
+	addr := req.PathParams["addr"]
+	if addr == "" {
+		rw.WriteHeader(http.StatusBadRequest)
+		rw.Write([]byte("{\"status\":\"Address not found\"}"))//just write a raw json
+		return
+	}
+
+	encoder := json.NewEncoder(rw)
+	ret, _ := tx.AddrHelper.VerifyUserId(addr)
+	rw.WriteHeader(http.StatusOK)
+	encoder.Encode(restData{"ok", ret})	
+	
+}

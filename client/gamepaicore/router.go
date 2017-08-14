@@ -26,10 +26,15 @@ type RpcREST struct{
 	RpcQueryREST
 }
 
+type BlockUtilREST struct{
+	*GamepaiREST
+}
+
 type restData struct{
 	Status string `json:"status"`
 	Data   interface{} `json:"data"`
 }
+
 
 func (s *GamepaiREST) SetResponseType(rw web.ResponseWriter, req *web.Request, next web.NextMiddlewareFunc) {
 	rw.Header().Set("Content-Type", "application/json")
@@ -103,6 +108,7 @@ func buildRouter() *web.Router {
 	accRouter.Delete("/:id", (*AccountREST).DeleteAcc)
 	accRouter.Get("/:id", (*AccountREST).QueryAcc)	
 	accRouter.Get("/dump/:id", (*AccountREST).DumpAcc)
+	accRouter.Get("/verify/:addr", (*AccountREST).VerifyAddr)
 	
 	rpcRouter := router.Subrouter(RpcREST{}, "/rpc")
 	rpcRouter.Middleware((*RpcREST).LoadRPC)
@@ -114,6 +120,9 @@ func buildRouter() *web.Router {
 	chainRouter.Middleware((*RpcQueryREST).LoadRPC)
 	chainRouter.Get("/:addr", (*RpcQueryREST).QueryUser) 
 	chainRouter.Get("/", (*RpcQueryREST).QueryChain)
+
+	blockRouter := router.Subrouter(BlockUtilREST{}, "/blocks")
+	blockRouter.Post("/parsetxpayload", (*BlockUtilREST).ParsePayload)
 
 	return router
 }
