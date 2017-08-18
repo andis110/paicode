@@ -60,7 +60,11 @@ func StartCoreDaemon(config string) string {
 	globalConfig.ConfigPath[0] = coreConfig.FileSystemPath // Path to look for the config file in
 	globalConfig.ConfigFileName = coreConfig.YamlFileName
 
-	err = globalConfig.InitGlobalWrapper(true, coreConfig.FileSystemPath, crtFile)
+	defaultViperSetting := make(map[string]string)
+	defaultViperSetting["peer.fileSystemPath"] = coreConfig.FileSystemPath
+	defaultViperSetting["peer.tls.rootcert.file"] = crtFile
+
+	err = globalConfig.InitGlobalWrapper(true, defaultViperSetting)
 	if err != nil {
 		log.Println("Init global config error: ", err)
 		return fmt.Sprintf("failed.")
