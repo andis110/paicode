@@ -13,3 +13,7 @@
 
     gomobile bind -target=ios gamecenter.mobi/paicode/client/gamepaicoresdk
 
+
+## Reference
+
+[https://github.com/golang/go/wiki/Mobile](https://github.com/golang/go/wiki/Mobile)
