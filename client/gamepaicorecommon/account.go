@@ -1,4 +1,4 @@
-package main
+package gamepaicorecommon
 
 import (
 	
@@ -20,7 +20,7 @@ func (s *AccountREST) QueryAcc(rw web.ResponseWriter, req *web.Request){
 	}
 	
 	encoder := json.NewEncoder(rw)
-	addr, err := defClient.Accounts.GetAddress(id)
+	addr, err := DefClient.Accounts.GetAddress(id)
 	if err != nil{
 		rw.WriteHeader(http.StatusNotFound)
 		encoder.Encode(restData{"Account not exist", err.Error()})
@@ -35,7 +35,7 @@ func (s *AccountREST) QueryAcc(rw web.ResponseWriter, req *web.Request){
 func (s *AccountREST) ListAcc(rw web.ResponseWriter, req *web.Request){
 	
 	retmap := map[string]string{}
-	for _, v := range defClient.Accounts.ListKeyData(){
+	for _, v := range DefClient.Accounts.ListKeyData(){
 		retmap[v[0]] = v[1]
 	}
 	
@@ -53,7 +53,7 @@ func (s *AccountREST) DeleteAcc(rw web.ResponseWriter, req *web.Request){
 	}
 	
 	encoder := json.NewEncoder(rw)
-	err := defClient.Accounts.DelPrivkey(id)
+	err := DefClient.Accounts.DelPrivkey(id)
 	if err != nil{
 		rw.WriteHeader(http.StatusNotFound)
 		encoder.Encode(restData{"Account not exist", nil})
@@ -86,10 +86,10 @@ func (s *AccountREST) NewAcc(rw web.ResponseWriter, req *web.Request){
 		
 	if len(prvkstr) != 0{
 		//import
-		_, err = defClient.Accounts.ImportPrivkey(prvkstr[0], accountid[0])
+		_, err = DefClient.Accounts.ImportPrivkey(prvkstr[0], accountid[0])
 	}else{
 		//generate
-		_, err = defClient.Accounts.GenPrivkey(accountid[0])
+		_, err = DefClient.Accounts.GenPrivkey(accountid[0])
 	}
 	
 	if err != nil{
@@ -113,7 +113,7 @@ func (s *AccountREST) DumpAcc(rw web.ResponseWriter, req *web.Request){
 	}	
 	
 	encoder := json.NewEncoder(rw)
-	ret, err := defClient.Accounts.DumpPrivkey(id)
+	ret, err := DefClient.Accounts.DumpPrivkey(id)
 
 	if err != nil{
 		rw.WriteHeader(http.StatusNotFound)

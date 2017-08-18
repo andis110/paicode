@@ -9,12 +9,11 @@ import (
 	
 	clicore "gamecenter.mobi/paicode/client"
 	"github.com/hyperledger/fabric/peerex"
+	gamepaicorecommon "gamecenter.mobi/paicode/client/gamepaicorecommon"
 )
 
 const defPaicodeName string = "gamepaicore_v01"
 const defRegion string = "gamepai01"
-
-var defClient *clicore.ClientCore 
 
 var mainCmd = &cobra.Command{
 	Use: "gamepai [listeningaddr]",
@@ -34,7 +33,7 @@ var mainCmd = &cobra.Command{
 			return err
 		}	
 		
-		defClient = clicore.NewClientCore(config)
+		gamepaicorecommon.DefClient = clicore.NewClientCore(config)
 
 		if !offlinemode {
 			
@@ -42,12 +41,12 @@ var mainCmd = &cobra.Command{
 			err := conn.Dialdefault()
 			if err != nil{
 				return err
-			}			
-			
-			defClient.PrepareRpc(conn)
-			defClient.SetRpcRegion(defRegion)
-			defClient.Rpc.Rpcbuilder.ChaincodeName = defPaicodeName
-			restLogger.Infof("Start rpc, chaincode is %s", defClient.Rpc.Rpcbuilder.ChaincodeName)
+			}
+
+			gamepaicorecommon.DefClient.PrepareRpc(conn)
+			gamepaicorecommon.DefClient.SetRpcRegion(defRegion)
+			gamepaicorecommon.DefClient.Rpc.Rpcbuilder.ChaincodeName = defPaicodeName
+			restLogger.Infof("Start rpc, chaincode is %s", gamepaicorecommon.DefClient.Rpc.Rpcbuilder.ChaincodeName)
 				
 		}else{
 			restLogger.Info("Run under off-line mode")
@@ -62,21 +61,21 @@ var mainCmd = &cobra.Command{
 		if listenaddr == ""{
 			listenaddr = "localhost:7280"
 		}
-		
-		defClient.Accounts.KeyMgr.Load()
+
+		gamepaicorecommon.DefClient.Accounts.KeyMgr.Load()
 		//defer defClient.Accounts.KeyMgr.Persist()			
 		
 		// Initialize the REST service object
 		restLogger.Infof("Initializing the REST service on %s", listenaddr)
 	
-		router := buildRouter()
+		router := gamepaicorecommon.BuildRouter()
 		err := http.ListenAndServe(listenaddr, router)
 		if err != nil {
 			restLogger.Errorf("ListenAndServe: %s", err)
 		}
 		
-		if defClient.IsRpcReady(){
-			defClient.ReleaseRpc()
+		if gamepaicorecommon.DefClient.IsRpcReady(){
+			gamepaicorecommon.DefClient.ReleaseRpc()
 		}
 	},	
 }

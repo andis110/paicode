@@ -1,4 +1,4 @@
-package main
+package gamepaicorecommon
 
 import (
 	"github.com/gocraft/web"
@@ -14,7 +14,7 @@ func (_ *BlockUtilREST) ParsePayload(rw web.ResponseWriter, req *web.Request){
 	}	
 		
 	encoder := json.NewEncoder(rw)	
-	out, err := defClient.Block.DecodePayload(req.Form.Get("payload"))
+	out, err := DefClient.Block.DecodePayload(req.Form.Get("payload"))
 	
 	if err != nil{
 		rw.WriteHeader(http.StatusBadRequest)

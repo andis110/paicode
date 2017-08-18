@@ -1,10 +1,12 @@
-package main 
+package gamepaicorecommon
 
 import (
 	"fmt"
 	"github.com/gocraft/web"
 	clicore "gamecenter.mobi/paicode/client"
 )
+
+var DefClient *clicore.ClientCore
 
 type GamepaiREST struct{
 	
@@ -51,7 +53,7 @@ func (s *AccountREST) PersistAccount(rw web.ResponseWriter, req *web.Request, ne
 	next(rw, req)
 	
 	if s.shouldPersist {
-		err := defClient.Accounts.KeyMgr.Persist()
+		err := DefClient.Accounts.KeyMgr.Persist()
 		
 		if err != nil{
 			panic(fmt.Sprintln("Persist fail", err))
@@ -62,7 +64,7 @@ func (s *AccountREST) PersistAccount(rw web.ResponseWriter, req *web.Request, ne
 
 func (s *RpcQueryREST) LoadRPC(rw web.ResponseWriter, req *web.Request, next web.NextMiddlewareFunc) {
 	
-	s.workCore = clicore.RpcCoreFromClient(&defClient.Rpc)
+	s.workCore = clicore.RpcCoreFromClient(&DefClient.Rpc)
 	
 	err := s.workCore.Rpc.Rpcbuilder.VerifyConn()
 	if err != nil{
@@ -85,7 +87,7 @@ func (s *RpcREST) SetRPCKey(rw web.ResponseWriter, req *web.Request, next web.Ne
 		panic("Must specific id")
 	}
 	
-	key, err := defClient.Accounts.KeyMgr.LoadPrivKey(kid)
+	key, err := DefClient.Accounts.KeyMgr.LoadPrivKey(kid)
 	if err != nil{
 		panic(fmt.Sprintf("No corresponding privkey for %s", kid))
 	}		
@@ -94,7 +96,7 @@ func (s *RpcREST) SetRPCKey(rw web.ResponseWriter, req *web.Request, next web.Ne
 	next(rw, req)
 }
 
-func buildRouter() *web.Router {
+func BuildRouter() *web.Router {
 	
 	router := web.New(GamepaiREST{})
 
