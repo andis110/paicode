@@ -28,7 +28,7 @@ var offlinemode bool = false
 var listenaddr string = ""
 var router *web.Router
 
-type GamepaiCoreConfig struct {
+type gamepaiCoreConfig struct {
 	FileSystemPath string
 	CrtFileName    string
 	YamlFileName   string
@@ -39,7 +39,7 @@ type GamepaiCoreConfig struct {
 func StartCoreDaemon(config string) string {
 	log.Println("config: ", config)
 
-	var coreConfig GamepaiCoreConfig
+	var coreConfig gamepaiCoreConfig
 	err := json.Unmarshal([]byte(config), &coreConfig)
 	if err != nil {
 		log.Println("Parse config error: ", err)
