@@ -27,6 +27,7 @@ var offlinemode bool = false
 //var logtostd bool = false
 var listenaddr string = ""
 var router *web.Router
+var srv *http.Server
 
 type gamepaiCoreConfig struct {
 	FileSystemPath string
@@ -43,7 +44,7 @@ func StartCoreDaemon(config string) string {
 	err := json.Unmarshal([]byte(config), &coreConfig)
 	if err != nil {
 		log.Println("Parse config error: ", err)
-		return fmt.Sprintf("failed.")
+		return fmt.Sprintf("failed")
 	}
 
 	log.Println("FileSystemPath: ", coreConfig.FileSystemPath)
@@ -68,13 +69,13 @@ func StartCoreDaemon(config string) string {
 	err = globalConfig.InitGlobalWrapper(true, defaultViperSetting)
 	if err != nil {
 		log.Println("Init global config error: ", err)
-		return fmt.Sprintf("failed.")
+		return fmt.Sprintf("failed")
 	}
 
 	err = os.MkdirAll(globalConfig.GetPeerFS(), 0777)
 	if err != nil {
 		restLogger.Error("Mkdir error: ", err)
-		return fmt.Sprintf("failed.")
+		return fmt.Sprintf("failed")
 	}
 
 	gamepaicorecommon.DefClient = clicore.NewClientCore(globalConfig)
@@ -86,7 +87,7 @@ func StartCoreDaemon(config string) string {
 		err := conn.Dialdefault()
 		if err != nil {
 			restLogger.Error("Dial default error: ", err)
-			return fmt.Sprintf("failed.")
+			return fmt.Sprintf("failed")
 		}
 
 		gamepaicorecommon.DefClient.PrepareRpc(conn)
@@ -113,13 +114,23 @@ func StartCoreDaemon(config string) string {
 	return "success"
 }
 
+func StopCoreDaemon() string {
+	ret := stopHttpServer()
+	if !ret {
+		return "failed"
+	}
+
+	return "success"
+}
+
 func GetSDKVersion() string {
 	return defSDKVersion
 }
 
 func startHttpServer() {
 	restLogger.Info("Starting HTTP Server ...")
-	err := http.ListenAndServe(listenaddr, router)
+	srv = &http.Server{Addr: listenaddr, Handler: router}
+	err := srv.ListenAndServe()
 	restLogger.Info("HTTP server is stopped.")
 	if err != nil {
 		restLogger.Error("Listen and Serve error: ", err)
@@ -128,4 +139,20 @@ func startHttpServer() {
 	if gamepaicorecommon.DefClient.IsRpcReady() {
 		gamepaicorecommon.DefClient.ReleaseRpc()
 	}
+}
+
+func stopHttpServer() bool {
+	restLogger.Info("Stoping HTTP Server ...")
+
+	if srv == nil {
+		return false
+	}
+
+	err := srv.Shutdown(nil)
+	if err != nil {
+		restLogger.Error("Stop HTTP server error: ", err)
+		return false
+	}
+
+	return true
 }
