@@ -145,6 +145,7 @@ func stopHttpServer() bool {
 	restLogger.Info("Stoping HTTP Server ...")
 
 	if srv == nil {
+		restLogger.Error("srv is nil.")
 		return false
 	}
 
