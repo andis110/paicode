@@ -17,7 +17,7 @@ import (
 
 const defPaicodeName string = "gamepaicore_v01"
 const defRegion string = "gamepai01"
-const defSDKVersion string = "1.0.0"
+const defSDKVersion string = "1.0.1"
 
 var restLogger = peerex.InitLogger("gamepaiREST")
 
