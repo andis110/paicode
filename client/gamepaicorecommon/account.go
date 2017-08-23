@@ -61,7 +61,8 @@ func (s *AccountREST) DeleteAcc(rw web.ResponseWriter, req *web.Request){
 	}
 	
 	rw.WriteHeader(http.StatusOK)
-	encoder.Encode(restData{"ok", nil})		
+	encoder.Encode(restData{"ok", nil})
+	s.shouldPersist = true
 }
 
 func (s *AccountREST) NewAcc(rw web.ResponseWriter, req *web.Request){
